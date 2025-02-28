@@ -83,12 +83,13 @@ jobs:
       - name: Build x86_64 binary
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
-          # Reinstall pip and numpy for x86_64 (force build from source)
+          # Force pip upgrade and rebuild numpy, numba, and llvmlite for x86_64
           arch -x86_64 python -m pip install --upgrade pip
-          arch -x86_64 pip uninstall -y numpy
+          arch -x86_64 pip uninstall -y numpy numba llvmlite
           arch -x86_64 pip install --force-reinstall --no-binary :all: numpy
-          # Install remaining dependencies in x86_64 mode
-          arch -x86_64 pip install flake8 pytest pyinstaller pyglet numba
+          arch -x86_64 pip install --force-reinstall --no-binary :all: numba llvmlite
+          # Install remaining dependencies for x86_64
+          arch -x86_64 pip install flake8 pytest pyinstaller pyglet
           # Build the binary in x86_64 mode
           arch -x86_64 pyinstaller --onefile --windowed --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
           mv dist/main dist/main_x86_64
