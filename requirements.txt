@@ -6,3 +6,5 @@ py2app==0.28.8
 flake8==7.1.2
 pytest==8.3.4
 pyinstaller
+exceptiongroup==1.2.2
+iniconfig==2.0.0
