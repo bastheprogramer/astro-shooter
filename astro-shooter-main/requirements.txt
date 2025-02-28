@@ -1,6 +1,0 @@
-pyglet
-numpy
-numba
-py2app
-flake8
-pytest
