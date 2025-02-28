@@ -5,7 +5,7 @@ from numpy import degrees, atan2
 import os
 
 sprites_dir = os.path.join(os.path.dirname(__file__), 'sprites'))
-player_img = load(os.path.join(sprites_dir, "player.png")
+player_img = load(os.path.join(sprites_dir, "player.png"))
 player_img.anchor_x = player_img.width // 2
 player_img.anchor_y = player_img.height // 2
 
