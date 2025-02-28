@@ -1,4 +1,4 @@
-name: Build and Package AstroShooter
+name: Build and Package AstroShooter (Split CPU Builds)
 
 on:
   push:
@@ -45,13 +45,13 @@ jobs:
           name: AstroShooter-Windows
           path: dist\main_windows.exe
 
-  build-macos-universal:
+  build-macos-arm64:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10 (macOS)
+      - name: Set up Python 3.10 (macOS arm64)
         uses: actions/setup-python@v3
         with:
           python-version: "3.10"
@@ -76,32 +76,38 @@ jobs:
           pyinstaller --onefile --windowed --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
           mv dist/main dist/main_arm64
 
-      - name: Clean build artifacts before x86_64 build
-        run: |
-          rm -rf build dist __pycache__
+      - name: Upload macOS arm64 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AstroShooter-macOS-arm64
+          path: dist/main_arm64
+
+  build-macos-x86_64:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10 (macOS x86_64)
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
 
       - name: Build x86_64 binary
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
-          # Force pip upgrade and rebuild numpy, numba, and llvmlite for x86_64
+          # Force pip upgrade and reinstall dependencies for x86_64
           arch -x86_64 python -m pip install --upgrade pip
           arch -x86_64 pip uninstall -y numpy numba llvmlite
           arch -x86_64 pip install --force-reinstall --no-binary :all: numpy
           arch -x86_64 pip install --force-reinstall --no-binary :all: numba llvmlite
-          # Install remaining dependencies for x86_64
           arch -x86_64 pip install flake8 pytest pyinstaller pyglet
-          # Build the binary in x86_64 mode
+          # Build the x86_64 binary
           arch -x86_64 pyinstaller --onefile --windowed --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
           mv dist/main dist/main_x86_64
 
-      - name: Create Universal Binary
-        run: |
-          mkdir -p dist
-          lipo -create -output dist/main_universal dist/main_arm64 dist/main_x86_64
-          file dist/main_universal
-
-      - name: Upload Universal Binary Artifact
+      - name: Upload macOS x86_64 Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AstroShooter-macOS-Univ
-          path: dist/main_universal
+          name: AstroShooter-macOS-x86_64
+          path: dist/main_x86_64
