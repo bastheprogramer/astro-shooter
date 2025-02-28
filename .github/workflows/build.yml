@@ -33,9 +33,7 @@ jobs:
 
       - name: Build Windows Executable with PyInstaller
         run: |
-          pyinstaller --onefile --windowed `
-            --add-data "sprites;sprites" `
-            --add-data "sounds;sounds" main.py
+          pyinstaller --onefile --windowed --add-data "sprites;sprites" --add-data "sounds;sounds" main.py
           Move-Item -Path "dist\main.exe" -Destination "dist\main_windows.exe"
 
       - name: Upload Windows Artifact
@@ -49,6 +47,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install LLVM via Homebrew (arm64)
+        run: |
+          brew update
+          brew install llvm
+          # On Apple Silicon, LLVM is usually installed in /opt/homebrew/opt/llvm/bin
+          echo 'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"' >> $GITHUB_ENV
 
       - name: Set up Python 3.10 (macOS arm64)
         uses: actions/setup-python@v3
@@ -73,6 +78,7 @@ jobs:
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
           pyinstaller --windowed --name AstroShooter.app --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
+
       - name: Rename app bundle for arm64
         run: mv dist/AstroShooter.app dist/AstroShooter_arm64.app
 
@@ -88,6 +94,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install LLVM via Homebrew (x86_64)
+        run: |
+          brew update
+          brew install llvm
+          # On Intel macOS runners (or when running via Rosetta), LLVM is usually in /usr/local/opt/llvm/bin
+          echo 'export PATH="/usr/local/opt/llvm/bin:$PATH"' >> $GITHUB_ENV
+
       - name: Set up Python 3.10 (macOS x86_64)
         uses: actions/setup-python@v3
         with:
@@ -96,14 +109,13 @@ jobs:
       - name: Build macOS app bundle for x86_64
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
-          # Force pip upgrade and reinstall dependencies for x86_64
+          # Force pip upgrade and reinstall dependencies under Rosetta (x86_64)
           arch -x86_64 python -m pip install --upgrade pip
           arch -x86_64 pip uninstall -y -r requirements.txt
           arch -x86_64 pip install --force-reinstall --no-binary :all: -r requirements.txt
-          # Build the x86_64 app bundle
+          # Build the x86_64 app bundle using PyInstaller
           arch -x86_64 pyinstaller --windowed --name AstroShooter.app --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
-      - name: Rename app bundle for x86_64
-        run: arch -x86_64 mv dist/AstroShooter.app dist/AstroShooter_x86_64.app
+          arch -x86_64 mv dist/AstroShooter.app dist/AstroShooter_x86_64.app
 
       - name: Upload macOS x86_64 Artifact
         uses: actions/upload-artifact@v4
