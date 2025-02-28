@@ -1,5 +1,6 @@
 name: Build and Package AstroShooter (Split CPU Builds)
 
+
 on:
   push:
     branches: ["main"]
@@ -60,7 +61,7 @@ jobs:
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
           python -m pip install --upgrade pip
-          pip install flake8 pytest pyinstaller pyglet numpy numba
+          pip install -r requirements.txt
 
       - name: Lint with flake8 (macOS arm64)
         run: |
