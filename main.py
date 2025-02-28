@@ -147,7 +147,7 @@ class Game(pyglet.window.Window):
         )
 
         # Set mouse cursor
-        image = pyglet.image.load("./sprites/pointer.png")
+        image = pyglet.image.load(os.path.join(sprites_dir ,"pointer.png"))
         cursor = pyglet.window.ImageMouseCursor(image)
         self.set_mouse_cursor(cursor)
 
