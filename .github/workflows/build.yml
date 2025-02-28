@@ -1,6 +1,5 @@
 name: Build and Package AstroShooter (Split CPU Builds)
 
-
 on:
   push:
     branches: ["main"]
