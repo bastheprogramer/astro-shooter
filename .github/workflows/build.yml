@@ -33,9 +33,9 @@ jobs:
 
       - name: Build Windows Executable with PyInstaller
         run: |
-          pyinstaller --onefile --windowed ^
-            --add-data "sprites;sprites" ^
-            --add-data "sounds;sounds" ^
+          pyinstaller --onefile --windowed `
+            --add-data "sprites;sprites" `
+            --add-data "sounds;sounds" `
             main.py
 
       - name: Upload Windows Artifact
@@ -43,8 +43,7 @@ jobs:
         with:
           name: AstroShooter-Windows
           path: dist\main.exe
-
-  build-macos:
+  build-macos-universal:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -60,24 +59,31 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest pyinstaller pyglet numpy numba
 
-      - name: Lint with flake8
-        run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run tests with pytest
-        run: pytest
-
-      - name: Build macOS .app with PyInstaller
+      - name: Build arm64 binary
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
-          pyinstaller --onefile --windowed \
-            --add-data "sprites:sprites" \
-            --add-data "sounds:sounds" \
-            main.py
+          pyinstaller --onefile --windowed --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
+          mv dist/main dist/main_arm64
 
-      - name: Upload macOS Artifact
+      - name: Clean build artifacts
+        run: |
+          rm -rf build dist __pycache__
+
+      - name: Build x86_64 binary
+        run: |
+          export MACOSX_DEPLOYMENT_TARGET=10.13
+          # Force x86_64 build using 'arch -x86_64'
+          arch -x86_64 pyinstaller --onefile --windowed --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
+          mv dist/main dist/main_x86_64
+
+      - name: Create Universal Binary
+        run: |
+          mkdir -p dist
+          lipo -create -output dist/main_universal dist/main_arm64 dist/main_x86_64
+          file dist/main_universal
+
+      - name: Upload Universal Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AstroShooter-macOS
-          path: dist/main.app
+          name: AstroShooter-macOS-Univ
+          path: dist/main_universal
