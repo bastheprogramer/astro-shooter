@@ -16,7 +16,7 @@ sound_dir = os.path.join(os.path.dirname(__file__), 'sounds')
 sprites_dir = os.path.join(os.path.dirname(__file__), 'sprites')
 
 
-print(sound_dir,sprites_dir)
+
 # -------------------------
 # Sound Effects & Music
 # -------------------------

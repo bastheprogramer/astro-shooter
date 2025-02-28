@@ -35,8 +35,7 @@ jobs:
         run: |
           pyinstaller --onefile --windowed `
             --add-data "sprites;sprites" `
-            --add-data "sounds;sounds" `
-            main.py
+            --add-data "sounds;sounds" main.py
           Move-Item -Path "dist\main.exe" -Destination "dist\main_windows.exe"
 
       - name: Upload Windows Artifact
@@ -70,17 +69,18 @@ jobs:
       - name: Run tests with pytest (macOS arm64)
         run: pytest
 
-      - name: Build arm64 binary
+      - name: Build macOS app bundle for arm64
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
-          pyinstaller --onefile --windowed --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
-          mv dist/main dist/main_arm64
+          pyinstaller --windowed --name AstroShooter.app --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
+      - name: Rename app bundle for arm64
+        run: mv dist/AstroShooter.app dist/AstroShooter_arm64.app
 
       - name: Upload macOS arm64 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AstroShooter-macOS-arm64
-          path: dist/main_arm64
+          path: dist/AstroShooter_arm64.app
 
   build-macos-x86_64:
     runs-on: macos-latest
@@ -93,19 +93,20 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Build x86_64 binary
+      - name: Build macOS app bundle for x86_64
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
           # Force pip upgrade and reinstall dependencies for x86_64
           arch -x86_64 python -m pip install --upgrade pip
           arch -x86_64 pip uninstall -y -r requirements.txt
           arch -x86_64 pip install --force-reinstall --no-binary :all: -r requirements.txt
-          # Build the x86_64 binary
-          arch -x86_64 pyinstaller --onefile --windowed --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
-          mv dist/main dist/main_x86_64
+          # Build the x86_64 app bundle
+          arch -x86_64 pyinstaller --windowed --name AstroShooter.app --add-data "sprites:sprites" --add-data "sounds:sounds" main.py
+      - name: Rename app bundle for x86_64
+        run: arch -x86_64 mv dist/AstroShooter.app dist/AstroShooter_x86_64.app
 
       - name: Upload macOS x86_64 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AstroShooter-macOS-x86_64
-          path: dist/main_x86_64
+          path: dist/AstroShooter_x86_64.app
