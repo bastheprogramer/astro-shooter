@@ -44,7 +44,7 @@ jobs:
             --add-data "sounds\powerUp.wav;sounds" \
             --add-data "sounds\background.wav;sounds"
 
-      - name: Build macOS Universal Binary
+      - name: Build for macOS Universal Binary
         if: runner.os == 'macos-latest'
         shell: bash
         run: |
@@ -92,8 +92,16 @@ jobs:
           mkdir -p dist/universal
           lipo -create dist/x86_64/AstroShooter dist/arm64/AstroShooter -output dist/universal/AstroShooter_universal
 
-      - name: Upload Build Artifact
+      - name: Upload Build Artifact (Windows)
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: AstroShooter-${{ runner.os }}
+          name: AstroShooter-Windows
           path: dist/
+
+      - name: Upload Build Artifact (macOS)
+        if: runner.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AstroShooter-macOS
+          path: dist/universal/
