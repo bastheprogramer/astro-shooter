@@ -24,39 +24,44 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      - name: Build executable
+      - name: Build for Windows
+        if: runner.os == 'Windows'
+        shell: bash
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            echo "Building for Windows (targeting Windows 8-11)..."
-            pyinstaller --onefile main.py \
-              --add-data "sprites\player.png;sprites" \
-              --add-data "sprites\explosion.png;sprites" \
-              --add-data "sprites\powerup.png;sprites" \
-              --add-data "sprites\astrode.png;sprites" \
-              --add-data "sprites\lazer.png;sprites" \
-              --add-data "sprites\pointer.png;sprites" \
-              --add-data "sounds\explosion.wav;sounds" \
-              --add-data "sounds\laserShoot.wav;sounds" \
-              --add-data "sounds\powerUp.wav;sounds" \
-              --add-data "sounds\background.wav;sounds"
-          else
-            echo "Building for macOS (targeting macOS 10.13.1 and later)..."
-            export MACOSX_DEPLOYMENT_TARGET=10.13.1
-            pyinstaller --onefile main.py \
-              --add-data "sprites/player.png:sprites" \
-              --add-data "sprites/explosion.png:sprites" \
-              --add-data "sprites/powerup.png:sprites" \
-              --add-data "sprites/astrode.png:sprites" \
-              --add-data "sprites/lazer.png:sprites" \
-              --add-data "sprites/pointer.png:sprites" \
-              --add-data "sounds/explosion.wav:sounds" \
-              --add-data "sounds/laserShoot.wav:sounds" \
-              --add-data "sounds/powerUp.wav:sounds" \
-              --add-data "sounds/background.wav:sounds"
-          fi
+          echo "Building for Windows (targeting Windows 8-11)..."
+          pyinstaller --onefile main.py \
+            --add-data "sprites\player.png;sprites" \
+            --add-data "sprites\explosion.png;sprites" \
+            --add-data "sprites\powerup.png;sprites" \
+            --add-data "sprites\astrode.png;sprites" \
+            --add-data "sprites\lazer.png;sprites" \
+            --add-data "sprites\pointer.png;sprites" \
+            --add-data "sounds\explosion.wav;sounds" \
+            --add-data "sounds\laserShoot.wav;sounds" \
+            --add-data "sounds\powerUp.wav;sounds" \
+            --add-data "sounds\background.wav;sounds"
+
+      - name: Build for macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          echo "Building for macOS (targeting macOS 10.13.1 and universal binary)..."
+          export MACOSX_DEPLOYMENT_TARGET=10.13.1
+          export ARCHFLAGS="-arch x86_64 -arch arm64"
+          pyinstaller --onefile main.py \
+            --add-data "sprites/player.png:sprites" \
+            --add-data "sprites/explosion.png:sprites" \
+            --add-data "sprites/powerup.png:sprites" \
+            --add-data "sprites/astrode.png:sprites" \
+            --add-data "sprites/lazer.png:sprites" \
+            --add-data "sprites/pointer.png:sprites" \
+            --add-data "sounds/explosion.wav:sounds" \
+            --add-data "sounds/laserShoot.wav:sounds" \
+            --add-data "sounds/powerUp.wav:sounds" \
+            --add-data "sounds/background.wav:sounds"
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AstroShooter-${{ matrix.os }}
+          name: AstroShooter-${{ runner.os }}
           path: dist/
