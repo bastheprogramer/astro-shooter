@@ -30,6 +30,9 @@ jobs:
         run: |
           echo "Building for Windows (targeting Windows 8-11)..."
           pyinstaller --onefile --windowed main.py \
+            --hidden-import pyglet \
+            --hidden-import numpy \
+            --hidden-import numba \
             --add-data "sprites\player.png;sprites" \
             --add-data "sprites\explosion.png;sprites" \
             --add-data "sprites\powerup.png;sprites" \
@@ -53,6 +56,9 @@ jobs:
           # Build for x86_64 with --windowed flag and separate dist path
           echo "Building x86_64 version..."
           arch -x86_64 pyinstaller --onefile --windowed main.py --name AstroShooter --distpath dist/x86_64 \
+            --hidden-import pyglet \
+            --hidden-import numpy \
+            --hidden-import numba \
             --add-data "sprites/player.png:sprites" \
             --add-data "sprites/explosion.png:sprites" \
             --add-data "sprites/powerup.png:sprites" \
