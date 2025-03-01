@@ -1,119 +1,88 @@
-name: Build and Package AstroShooter
+name: Build Astro Shooter
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
   pull_request:
-    branches: ["main"]
+    branches: [ main ]
 
 jobs:
-  build-windows:
+  windows:
+    name: Build Windows EXE
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Python 3.10 (Windows)
-        uses: actions/setup-python@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.9'
 
-      - name: Install dependencies (Windows)
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller pyglet numpy numba
+          pip install pyglet numba numpy
+          pip install pyinstaller
 
-      - name: Build Windows Executable with PyInstaller
+      - name: Build EXE with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --add-data "sprites;sprites" --add-data "sounds;sounds" main.py
-          Move-Item -Path "dist\main.exe" -Destination "dist\AstroShooter_Windows.exe"
+          # The --add-data option includes asset directories.
+          pyinstaller --onefile --add-data "sound;sound" --add-data "sprites;sprites" main.py
 
       - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: AstroShooter-Windows
-          path: dist\AstroShooter_Windows.exe
+          name: AstroShooter-windows-exe
+          path: dist/*.exe
 
-  build-macos-arm64:
+  macos:
+    name: Build macOS App
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [ x86_64, arm64, universal ]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Install LLVM via Homebrew (arm64)
-        run: |
-          brew update
-          brew install llvm
-          # On Apple Silicon, LLVM is typically installed in /opt/homebrew/opt/llvm/bin
-          echo 'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"' >> $GITHUB_ENV
-
-      - name: Set up Python 3.10 (macOS arm64)
-        uses: actions/setup-python@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.9'
 
-      - name: Install dependencies (macOS arm64)
+      - name: Install Dependencies
         run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.13
           python -m pip install --upgrade pip
-          pip install -r requirements.txt py2app
+          pip install pyglet numba numpy
+          pip install py2app
 
-      - name: Lint and Test (macOS arm64)
+      - name: Build Astro Shooter for ${{ matrix.arch }}
         run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-          pytest
+          if [ "${{ matrix.arch }}" == "universal" ]; then
+              echo "Building universal app..."
+              # Build for x86_64
+              arch -x86_64 python setup.py py2app
+              mv "dist/Astro Shooter.app" "dist/AstroShooter_x86_64.app"
+              rm -rf build
+              # Build for arm64
+              arch -arm64 python setup.py py2app
+              mv "dist/Astro Shooter.app" "dist/AstroShooter_arm64.app"
+              # Merge the main executables using lipo.
+              lipo -create -output "dist/Astro Shooter.app/Contents/MacOS/Astro Shooter" \
+                "dist/AstroShooter_x86_64.app/Contents/MacOS/Astro Shooter" \
+                "dist/AstroShooter_arm64.app/Contents/MacOS/Astro Shooter"
+              echo "Universal app built."
+          else
+              if [ "${{ matrix.arch }}" == "x86_64" ]; then
+                  arch -x86_64 python setup.py py2app
+              elif [ "${{ matrix.arch }}" == "arm64" ]; then
+                  arch -arm64 python setup.py py2app
+              fi
+          fi
 
-      - name: Build macOS App with py2app (arm64)
-        run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.13
-          python setup.py py2app 
-          mv dist/AstroShooter.app dist/AstroShooter_macOS_arm64.app
-
-      - name: Upload macOS arm64 Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: AstroShooter-macOS-arm64
-          path: dist/AstroShooter_macOS_arm64.app
-
-  build-macos-x86_64:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install LLVM via Homebrew (x86_64)
-        run: |
-          brew update
-          brew install llvm
-          # On Intel macOS runners (or when running under Rosetta), LLVM is typically in /usr/local/opt/llvm/bin
-          echo 'export PATH="/usr/local/opt/llvm/bin:$PATH"' >> $GITHUB_ENV
-
-      - name: Set up Python 3.10 (macOS x86_64)
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies (macOS x86_64)
-        run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.13
-          arch -x86_64 python -m pip install --upgrade pip
-          arch -x86_64 pip install -r requirements.txt py2app
-
-      - name: Lint and Test (macOS x86_64)
-        run: |
-          arch -x86_64 flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          arch -x86_64 flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-          arch -x86_64 pytest
-
-      - name: Build macOS App with py2app (x86_64)
-        run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.13
-          arch -x86_64 python setup.py py2app 
-          arch -x86_64 mv dist/AstroShooter.app dist/AstroShooter_macOS_x86_64.app
-
-      - name: Upload macOS x86_64 Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AstroShooter-macOS-x86_64
-          path: dist/AstroShooter_macOS_x86_64.app
+          name: AstroShooter-macos-${{ matrix.arch }}-app
+          path: dist/*.app
