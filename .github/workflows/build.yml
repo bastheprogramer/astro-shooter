@@ -46,13 +46,13 @@ jobs:
         shell: bash
         run: |
           echo "Building for macOS universal binary..."
-
-          # Clean previous builds
+          # Clean previous builds and create separate dist directories
           rm -rf build dist
+          mkdir -p dist/x86_64 dist/arm64
 
-          # Build for x86_64 with windowed flag
+          # Build for x86_64 with --windowed flag and separate dist path
           echo "Building x86_64 version..."
-          arch -x86_64 pyinstaller --onefile --windowed main.py \
+          arch -x86_64 pyinstaller --onefile --windowed main.py --name AstroShooter --distpath dist/x86_64 \
             --add-data "sprites/player.png:sprites" \
             --add-data "sprites/explosion.png:sprites" \
             --add-data "sprites/powerup.png:sprites" \
@@ -62,18 +62,14 @@ jobs:
             --add-data "sounds/explosion.wav:sounds" \
             --add-data "sounds/laserShoot.wav:sounds" \
             --add-data "sounds/powerUp.wav:sounds" \
-            --add-data "sounds/background.wav:sounds" \
-            --name AstroShooter_x86_64
-          
-          mv dist/AstroShooter_x86_64 dist/AstroShooter_x86_64_binary
+            --add-data "sounds/background.wav:sounds"
 
           # Clean build directories to avoid conflicts
           rm -rf build
-          rm -rf dist
 
-          # Build for arm64 with windowed flag
+          # Build for arm64 with --windowed flag and separate dist path
           echo "Building arm64 version..."
-          arch -arm64 pyinstaller --onefile --windowed main.py \
+          arch -arm64 pyinstaller --onefile --windowed main.py --name AstroShooter --distpath dist/arm64 \
             --add-data "sprites/player.png:sprites" \
             --add-data "sprites/explosion.png:sprites" \
             --add-data "sprites/powerup.png:sprites" \
@@ -83,14 +79,12 @@ jobs:
             --add-data "sounds/explosion.wav:sounds" \
             --add-data "sounds/laserShoot.wav:sounds" \
             --add-data "sounds/powerUp.wav:sounds" \
-            --add-data "sounds/background.wav:sounds" \
-            --name AstroShooter_arm64
-
-          mv dist/AstroShooter_arm64 dist/AstroShooter_arm64_binary
+            --add-data "sounds/background.wav:sounds"
 
           # Merge the two binaries into one universal binary
-          mkdir -p dist
-          lipo -create dist/AstroShooter_x86_64_binary dist/AstroShooter_arm64_binary -output dist/AstroShooter_universal
+          echo "Merging binaries..."
+          mkdir -p dist/universal
+          lipo -create dist/x86_64/AstroShooter dist/arm64/AstroShooter -output dist/universal/AstroShooter_universal
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
