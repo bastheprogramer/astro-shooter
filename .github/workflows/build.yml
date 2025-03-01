@@ -29,7 +29,7 @@ jobs:
         shell: bash
         run: |
           echo "Building for Windows (targeting Windows 8-11)..."
-          pyinstaller --onefile main.py \
+          pyinstaller --onefile --windowed main.py \
             --add-data "sprites\player.png;sprites" \
             --add-data "sprites\explosion.png;sprites" \
             --add-data "sprites\powerup.png;sprites" \
@@ -41,14 +41,18 @@ jobs:
             --add-data "sounds\powerUp.wav;sounds" \
             --add-data "sounds\background.wav;sounds"
 
-      - name: Build for macOS
+      - name: Build macOS Universal Binary
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          echo "Building for macOS (targeting macOS 10.13.1 and universal binary)..."
-          export MACOSX_DEPLOYMENT_TARGET=10.13.1
-          export ARCHFLAGS="-arch x86_64 -arch arm64"
-          pyinstaller --onefile main.py \
+          echo "Building for macOS universal binary..."
+
+          # Clean previous builds
+          rm -rf build dist
+
+          # Build for x86_64 with windowed flag
+          echo "Building x86_64 version..."
+          arch -x86_64 pyinstaller --onefile --windowed main.py \
             --add-data "sprites/player.png:sprites" \
             --add-data "sprites/explosion.png:sprites" \
             --add-data "sprites/powerup.png:sprites" \
@@ -58,7 +62,35 @@ jobs:
             --add-data "sounds/explosion.wav:sounds" \
             --add-data "sounds/laserShoot.wav:sounds" \
             --add-data "sounds/powerUp.wav:sounds" \
-            --add-data "sounds/background.wav:sounds"
+            --add-data "sounds/background.wav:sounds" \
+            --name AstroShooter_x86_64
+          
+          mv dist/AstroShooter_x86_64 dist/AstroShooter_x86_64_binary
+
+          # Clean build directories to avoid conflicts
+          rm -rf build
+          rm -rf dist
+
+          # Build for arm64 with windowed flag
+          echo "Building arm64 version..."
+          arch -arm64 pyinstaller --onefile --windowed main.py \
+            --add-data "sprites/player.png:sprites" \
+            --add-data "sprites/explosion.png:sprites" \
+            --add-data "sprites/powerup.png:sprites" \
+            --add-data "sprites/astrode.png:sprites" \
+            --add-data "sprites/lazer.png:sprites" \
+            --add-data "sprites/pointer.png:sprites" \
+            --add-data "sounds/explosion.wav:sounds" \
+            --add-data "sounds/laserShoot.wav:sounds" \
+            --add-data "sounds/powerUp.wav:sounds" \
+            --add-data "sounds/background.wav:sounds" \
+            --name AstroShooter_arm64
+
+          mv dist/AstroShooter_arm64 dist/AstroShooter_arm64_binary
+
+          # Merge the two binaries into one universal binary
+          mkdir -p dist
+          lipo -create dist/AstroShooter_x86_64_binary dist/AstroShooter_arm64_binary -output dist/AstroShooter_universal
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
