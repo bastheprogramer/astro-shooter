@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ windows-latest, macos-latest ]
+        os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -21,8 +21,8 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install PyInstaller
-        run: pip install pyinstaller
+      - name: Install dependencies
+        run: pip install pyinstaller pyglet numpy numba
 
       - name: Build for Windows
         if: runner.os == 'Windows'
@@ -49,11 +49,10 @@ jobs:
         shell: bash
         run: |
           echo "Building for macOS universal binary..."
-          # Clean previous builds and create separate dist directories
           rm -rf build dist
           mkdir -p dist/x86_64 dist/arm64
 
-          # Build for x86_64 with --windowed flag and separate dist path
+          # Build x86_64 version
           echo "Building x86_64 version..."
           arch -x86_64 pyinstaller --onefile --windowed main.py --name AstroShooter --distpath dist/x86_64 \
             --hidden-import pyglet \
@@ -70,12 +69,14 @@ jobs:
             --add-data "sounds/powerUp.wav:sounds" \
             --add-data "sounds/background.wav:sounds"
 
-          # Clean build directories to avoid conflicts
           rm -rf build
 
-          # Build for arm64 with --windowed flag and separate dist path
+          # Build arm64 version
           echo "Building arm64 version..."
           arch -arm64 pyinstaller --onefile --windowed main.py --name AstroShooter --distpath dist/arm64 \
+            --hidden-import pyglet \
+            --hidden-import numpy \
+            --hidden-import numba \
             --add-data "sprites/player.png:sprites" \
             --add-data "sprites/explosion.png:sprites" \
             --add-data "sprites/powerup.png:sprites" \
@@ -87,7 +88,6 @@ jobs:
             --add-data "sounds/powerUp.wav:sounds" \
             --add-data "sounds/background.wav:sounds"
 
-          # Merge the two binaries into one universal binary
           echo "Merging binaries..."
           mkdir -p dist/universal
           lipo -create dist/x86_64/AstroShooter dist/arm64/AstroShooter -output dist/universal/AstroShooter_universal
