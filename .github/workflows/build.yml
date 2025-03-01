@@ -27,11 +27,11 @@ jobs:
 
       - name: Build EXE with PyInstaller
         run: |
-          # The --add-data option includes asset directories.
+          # Include asset directories using --add-data (use semicolon as separator on Windows)
           pyinstaller --onefile --add-data "sound;sound" --add-data "sprites;sprites" main.py
 
       - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: AstroShooter-windows-exe
           path: dist/*.exe
@@ -82,7 +82,7 @@ jobs:
           fi
 
       - name: Upload macOS Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: AstroShooter-macos-${{ matrix.arch }}-app
           path: dist/*.app
