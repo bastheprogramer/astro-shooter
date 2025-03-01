@@ -14,10 +14,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
@@ -26,7 +26,6 @@ jobs:
 
       - name: Build executable
         run: |
-          # For Windows, use ";" as separator for --add-data; for macOS, use ":"
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             echo "Building for Windows..."
             pyinstaller --onefile main.py \
@@ -56,7 +55,7 @@ jobs:
           fi
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: AstroShooter-${{ matrix.os }}
           path: dist/
