@@ -67,7 +67,7 @@ jobs:
       - name: Build macOS App with py2app (arm64)
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
-          python setup.py py2app --noconfirm
+          python setup.py py2app 
           mv dist/AstroShooter.app dist/AstroShooter_macOS_arm64.app
 
       - name: Upload macOS arm64 Artifact
@@ -109,7 +109,7 @@ jobs:
       - name: Build macOS App with py2app (x86_64)
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.13
-          arch -x86_64 python setup.py py2app --noconfirm
+          arch -x86_64 python setup.py py2app 
           arch -x86_64 mv dist/AstroShooter.app dist/AstroShooter_macOS_x86_64.app
 
       - name: Upload macOS x86_64 Artifact
