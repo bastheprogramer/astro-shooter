@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [ windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -44,15 +44,15 @@ jobs:
             --add-data "sounds\powerUp.wav;sounds" \
             --add-data "sounds\background.wav;sounds"
 
-      - name: Build for macOS Universal Binary
-        if: runner.os == 'macos-latest'
+      - name: Build macOS Universal Binary
+        if: runner.os == 'macOS'
         shell: bash
         run: |
           echo "Building for macOS universal binary..."
           rm -rf build dist
           mkdir -p dist/x86_64 dist/arm64
 
-          # Build x86_64 version
+          # Build for x86_64 with --windowed flag and hidden imports for required modules
           echo "Building x86_64 version..."
           arch -x86_64 pyinstaller --onefile --windowed main.py --name AstroShooter --distpath dist/x86_64 \
             --hidden-import pyglet \
@@ -65,13 +65,13 @@ jobs:
             --add-data "sprites/lazer.png:sprites" \
             --add-data "sprites/pointer.png:sprites" \
             --add-data "sounds/explosion.wav:sounds" \
-            --add-data "sounds\laserShoot.wav:sounds" \
-            --add-data "sounds\powerUp.wav:sounds" \
-            --add-data "sounds\background.wav:sounds"
+            --add-data "sounds/laserShoot.wav:sounds" \
+            --add-data "sounds/powerUp.wav:sounds" \
+            --add-data "sounds/background.wav:sounds"
 
           rm -rf build
 
-          # Build arm64 version
+          # Build for arm64 with --windowed flag and hidden imports for required modules
           echo "Building arm64 version..."
           arch -arm64 pyinstaller --onefile --windowed main.py --name AstroShooter --distpath dist/arm64 \
             --hidden-import pyglet \
@@ -84,24 +84,16 @@ jobs:
             --add-data "sprites/lazer.png:sprites" \
             --add-data "sprites/pointer.png:sprites" \
             --add-data "sounds/explosion.wav:sounds" \
-            --add-data "sounds\laserShoot.wav:sounds" \
-            --add-data "sounds\powerUp.wav:sounds" \
-            --add-data "sounds\background.wav:sounds"
+            --add-data "sounds/laserShoot.wav:sounds" \
+            --add-data "sounds/powerUp.wav:sounds" \
+            --add-data "sounds/background.wav:sounds"
 
           echo "Merging binaries..."
           mkdir -p dist/universal
           lipo -create dist/x86_64/AstroShooter dist/arm64/AstroShooter -output dist/universal/AstroShooter_universal
 
-      - name: Upload Build Artifact (Windows)
-        if: runner.os == 'Windows'
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AstroShooter-Windows
+          name: AstroShooter-${{ runner.os }}
           path: dist/
-
-      - name: Upload Build Artifact (macOS)
-        if: runner.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: AstroShooter-macOS
-          path: dist/universal/
