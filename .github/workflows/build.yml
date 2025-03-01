@@ -7,80 +7,56 @@ on:
     branches: [ main ]
 
 jobs:
-  windows:
-    name: Build Windows EXE
-    runs-on: windows-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyglet numba numpy pyinstaller
-
-      - name: Build EXE with PyInstaller
-        run: |
-          # Include the asset directories; note the semicolon separator for Windows.
-          pyinstaller --onefile --add-data "sprites;sprites" --add-data "sounds;sounds" main.py
-
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AstroShooter-windows-exe
-          path: dist/*.exe
-
-  macos:
-    name: Build macOS App
-    runs-on: macos-latest
+  build:
     strategy:
       matrix:
-        arch: [ x86_64, arm64, universal ]
+        os: [ windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.x'
 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyglet numba numpy py2app
+      - name: Install PyInstaller
+        run: pip install pyinstaller
 
-      - name: Build Astro Shooter for ${{ matrix.arch }}
+      - name: Build executable
         run: |
-          if [ "${{ matrix.arch }}" == "universal" ]; then
-              echo "Building universal app..."
-              # Build for x86_64 first.
-              arch -x86_64 python setup.py py2app
-              mv "dist/Astro Shooter.app" "dist/AstroShooter_x86_64.app"
-              rm -rf build
-              # Build for arm64.
-              arch -arm64 python setup.py py2app
-              mv "dist/Astro Shooter.app" "dist/AstroShooter_arm64.app"
-              # Merge the executables using lipo.
-              lipo -create -output "dist/Astro Shooter.app/Contents/MacOS/Astro Shooter" \
-                "dist/AstroShooter_x86_64.app/Contents/MacOS/Astro Shooter" \
-                "dist/AstroShooter_arm64.app/Contents/MacOS/Astro Shooter"
-              echo "Universal app built."
+          # For Windows, use ";" as separator for --add-data; for macOS, use ":"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "Building for Windows..."
+            pyinstaller --onefile main.py \
+              --add-data "sprites\player.png;sprites" \
+              --add-data "sprites\explosion.png;sprites" \
+              --add-data "sprites\powerup.png;sprites" \
+              --add-data "sprites\astrode.png;sprites" \
+              --add-data "sprites\lazer.png;sprites" \
+              --add-data "sprites\pointer.png;sprites" \
+              --add-data "sounds\explosion.wav;sounds" \
+              --add-data "sounds\laserShoot.wav;sounds" \
+              --add-data "sounds\powerUp.wav;sounds" \
+              --add-data "sounds\background.wav;sounds"
           else
-              if [ "${{ matrix.arch }}" == "x86_64" ]; then
-                  arch -x86_64 python setup.py py2app
-              elif [ "${{ matrix.arch }}" == "arm64" ]; then
-                  arch -arm64 python setup.py py2app
-              fi
+            echo "Building for macOS..."
+            pyinstaller --onefile main.py \
+              --add-data "sprites/player.png:sprites" \
+              --add-data "sprites/explosion.png:sprites" \
+              --add-data "sprites/powerup.png:sprites" \
+              --add-data "sprites/astrode.png:sprites" \
+              --add-data "sprites/lazer.png:sprites" \
+              --add-data "sprites/pointer.png:sprites" \
+              --add-data "sounds/explosion.wav:sounds" \
+              --add-data "sounds/laserShoot.wav:sounds" \
+              --add-data "sounds/powerUp.wav:sounds" \
+              --add-data "sounds/background.wav:sounds"
           fi
 
-      - name: Upload macOS Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v2
         with:
-          name: AstroShooter-macos-${{ matrix.arch }}-app
-          path: dist/*.app
+          name: AstroShooter-${{ matrix.os }}
+          path: dist/
