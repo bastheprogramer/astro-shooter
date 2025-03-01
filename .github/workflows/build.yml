@@ -11,7 +11,7 @@ jobs:
     name: Build Windows EXE
     runs-on: windows-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Setup Python
@@ -22,13 +22,12 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyglet numba numpy
-          pip install pyinstaller
+          pip install pyglet numba numpy pyinstaller
 
       - name: Build EXE with PyInstaller
         run: |
-          # Include asset directories using --add-data (use semicolon as separator on Windows)
-          pyinstaller --onefile --add-data "sound;sound" --add-data "sprites;sprites" main.py
+          # Include the asset directories; note the semicolon separator for Windows.
+          pyinstaller --onefile --add-data "sprites;sprites" --add-data "sounds;sounds" main.py
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
@@ -43,7 +42,7 @@ jobs:
       matrix:
         arch: [ x86_64, arm64, universal ]
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Setup Python
@@ -54,21 +53,20 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyglet numba numpy
-          pip install py2app
+          pip install pyglet numba numpy py2app
 
       - name: Build Astro Shooter for ${{ matrix.arch }}
         run: |
           if [ "${{ matrix.arch }}" == "universal" ]; then
               echo "Building universal app..."
-              # Build for x86_64
+              # Build for x86_64 first.
               arch -x86_64 python setup.py py2app
               mv "dist/Astro Shooter.app" "dist/AstroShooter_x86_64.app"
               rm -rf build
-              # Build for arm64
+              # Build for arm64.
               arch -arm64 python setup.py py2app
               mv "dist/Astro Shooter.app" "dist/AstroShooter_arm64.app"
-              # Merge the main executables using lipo.
+              # Merge the executables using lipo.
               lipo -create -output "dist/Astro Shooter.app/Contents/MacOS/Astro Shooter" \
                 "dist/AstroShooter_x86_64.app/Contents/MacOS/Astro Shooter" \
                 "dist/AstroShooter_arm64.app/Contents/MacOS/Astro Shooter"
