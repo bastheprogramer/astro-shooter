@@ -27,7 +27,7 @@ jobs:
       - name: Build executable
         run: |
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            echo "Building for Windows..."
+            echo "Building for Windows (targeting Windows 8-11)..."
             pyinstaller --onefile main.py \
               --add-data "sprites\player.png;sprites" \
               --add-data "sprites\explosion.png;sprites" \
@@ -40,7 +40,8 @@ jobs:
               --add-data "sounds\powerUp.wav;sounds" \
               --add-data "sounds\background.wav;sounds"
           else
-            echo "Building for macOS..."
+            echo "Building for macOS (targeting macOS 10.13.1 and later)..."
+            export MACOSX_DEPLOYMENT_TARGET=10.13.1
             pyinstaller --onefile main.py \
               --add-data "sprites/player.png:sprites" \
               --add-data "sprites/explosion.png:sprites" \
