@@ -7,12 +7,10 @@ An exciting arcade-style space shooter built with Python and Pygame. In this gam
 - [Introduction](#introduction)
 - [Features](#features)
 - [How to run](#How-to-run)
-- [Usage](#usage)
 - [Controls](#controls)
-- [Project Structure](#project-structure)
 - [Future Enhancements](#future-enhancements)
 - [Credits](#credits)
-- [License](#license)
+
 
 ## Introduction
 
@@ -44,3 +42,14 @@ Space Game is a fast-paced, arcade shooter where quick reflexes and strategic po
    ```bash
    python main.py
    
+
+## Controls
+   - Arrow Keys: Move your spaceship.
+   - Spacebar: Shoot lasers.
+   - P: Pause or resume the game.
+
+## Future Enhancements
+   Nothing yet, but feel free to open a [pull request](https://github.com/bastheprogramer/space-game/pulls) with your feature suggestions!
+
+## Credits
+- **Developed by:** [bastheprogramer](https://github.com/bastheprogramer)
