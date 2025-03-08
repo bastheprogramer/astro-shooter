@@ -14,6 +14,8 @@ player_sprite.scale = 0.1
 player_sprite.x = 400
 player_sprite.y = 300
 
+xspeed = 0
+yspeed = 0
 @njit
 def calculate(player_x, player_y, mouse_x, mouse_y):
     dx = player_x - mouse_x
