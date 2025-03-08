@@ -11,8 +11,8 @@ player_img.anchor_y = player_img.height // 2
 
 player_sprite = Sprite(player_img)
 player_sprite.scale = 0.1
-player_sprite.x = 400
-player_sprite.y = 300
+player_sprite.x = 0
+player_sprite.y = 0
 
 xspeed = 0
 yspeed = 0

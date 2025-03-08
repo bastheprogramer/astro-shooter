@@ -1,6 +1,6 @@
 import pyglet
 import os
-
+from random import randint
 sprites_dir = os.path.join(os.path.dirname(__file__), 'sprites')
 explosion_img = pyglet.image.load(os.path.join(sprites_dir,"explosion.png"))
 explosion_img.anchor_x = explosion_img.width // 2
@@ -13,6 +13,7 @@ class Explosion:
         self.sprite = pyglet.sprite.Sprite(
             explosion_img, x=x, y=y, batch=batch)
         self.sprite.scale = 5
+        self.sprite.rotation = randint(0,360)
         self.lifetime = 0.1  # Explosion lasts 0.5 seconds.
         self.elapsed = 0
 

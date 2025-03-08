@@ -1,2 +1,8 @@
 
 .DS_Store
+*.dat
+*.pyc
+/__pycache__
+highscore.txt
+/__pycache__
+*.pyc

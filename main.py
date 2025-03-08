@@ -21,6 +21,7 @@ sprites_dir = os.path.join(os.path.dirname(__file__), 'sprites')
 # Sound Effects & Music
 # -------------------------
 explosion_sound = pyglet.media.load(os.path.join(sound_dir, "explosion.wav"), streaming=False)
+
 laser_sound = pyglet.media.load(os.path.join(sound_dir, "laserShoot.wav"), streaming=False)
 powerup_sound = pyglet.media.load(os.path.join(sound_dir, "powerUp.wav"), streaming=False)
 background_music = pyglet.media.load(os.path.join(sound_dir, "background.wav"), streaming=True)
@@ -62,7 +63,7 @@ MAX_ASTEROIDS = 90
 # -------------------------
 class Game(pyglet.window.Window):
     def __init__(self, width=800, height=600):
-        super().__init__(width=width, height=height, caption="Astro Shooter")
+        super().__init__(width=width, height=height, caption="Astro Shooter", resizable=True)
         self.batch = pyglet.graphics.Batch()
 
         # Game states: "menu", "playing", "paused", "gameover"
@@ -70,6 +71,7 @@ class Game(pyglet.window.Window):
         self.score = 0
         self.lives = 3
         self.high_score = load_high_score()
+        self.collected = False
 
         # Power-up effects (dictionary-based)
         self.active_powerups = {"speed_boost": 1.0, "tryL_boost": False, "shield": False}
@@ -169,7 +171,7 @@ class Game(pyglet.window.Window):
             self.fps_time = 0
 
     def fixed_update(self, dt):
-        if random.randint(0, 100) <= 5:
+        if random.randint(0, 100) <= 1:
             gc.collect()
 
         # Update power-up timers
@@ -195,7 +197,7 @@ class Game(pyglet.window.Window):
                 pyglet.window.key.D: (1, 0)
             }
             dx, dy = 0, 0
-            speed = 300 * self.active_powerups.get("speed_boost", 1.0)
+            speed = 200 * self.active_powerups.get("speed_boost", 1.0)
             for key in self.active_keys:
                 if key in direction_vectors:
                     vx, vy = direction_vectors[key]
@@ -233,7 +235,7 @@ class Game(pyglet.window.Window):
                         fragments = a.explode()
                         self.asteroids.extend(fragments)
                         self.score += 50
-                        if random.randint(1, 100) <= 5:
+                        if random.randint(1, 100) <= 2:
                             self.powerups.append(PowerUp(a.astrode_sprite.x, a.astrode_sprite.y, self.batch, powerup_img))
                         safe_delete_sprite(a.astrode_sprite)
                         if a in self.asteroids:
@@ -304,7 +306,7 @@ class Game(pyglet.window.Window):
                     random.randint(-5, 5)*50,
                     random.randint(-5, 5)*50,
                     random.randint(0,360),
-                    random.randint(23,45),
+                    random.randint(-45,45),
                     0.35,
                     type_val=3,
                     astrode_img=astrode_img
@@ -336,7 +338,14 @@ class Game(pyglet.window.Window):
         self.batch.draw()
         if self.game_state == "menu":
             self.label_menu.draw()
+            player.player_sprite.rotation = 0
+            player.player_sprite.x = int(self.width) //2
+            player.player_sprite.y = int(self.height) //2
+            if not self.collected:
+                gc.collect()
+                self.collected = True
         elif self.game_state == "playing":
+            self.collected = False
             self.label_score.text = f"Score: {self.score}"
             self.label_lives.text = f"Lives: {self.lives}"
             self.label_fps.text = f"FPS: {self.fps:.2f}"
@@ -344,15 +353,24 @@ class Game(pyglet.window.Window):
             self.label_lives.draw()
             self.label_fps.draw()
         elif self.game_state == "paused":
+            if not self.collected:
+                gc.collect()
+                self.collected = True
             self.label_pause.draw()
         elif self.game_state == "gameover":
-            gc.collect()
+            if not self.collected:
+                gc.collect()
+                self.collected = True
+            player.player_sprite.rotation = 0
+            player.player_sprite.x = int(self.width) //2
+            player.player_sprite.y = int(self.height) //2
             self.label_gameover_main.draw()
             self.label_gameover_score.text = f"Final Score: {self.score}"
             self.label_gameover_score.draw()
             self.label_gameover_highscore.text = f"High Score: {self.high_score}"
             self.label_gameover_highscore.draw()
             self.label_gameover_restart.draw()
+
 
     def on_key_press(self, symbol, modifiers):
         self.active_keys.add(symbol)
@@ -384,6 +402,53 @@ class Game(pyglet.window.Window):
         if self.game_state == "playing" and button == pyglet.window.mouse.LEFT:
             self.iamshooting = False
             self.shoottime = 0
+            
+    def on_resize(self, width, height):
+        # Update positions of dynamic text labels based on new window dimensions
+        self.label_menu.x = width // 2
+        self.label_menu.y = height // 2
+        self.label_score.x = 10  # left margin stays the same
+        self.label_score.y = height - 30
+        self.label_lives.x = 10
+        self.label_lives.y = height - 60
+        self.label_fps.x = 10
+        self.label_fps.y = height - 90
+        self.label_pause.x = width // 2
+        self.label_pause.y = height // 2
+        self.label_gameover_main.x = width // 2
+        self.label_gameover_main.y = height // 2 + 40
+        self.label_gameover_score.x = width // 2
+        self.label_gameover_score.y = height // 2
+        self.label_gameover_highscore.x = width // 2
+        self.label_gameover_highscore.y = height // 2 - 40
+        self.label_gameover_restart.x = width // 2
+        self.label_gameover_restart.y = height // 2 - 80
+        # Update quadtree boundary for spatial queries
+        self.quadtree_boundary = (0, 0, width, height)
+        # Force a redraw that draws only text:
+        self.clear()  # Clear the window
+        self.batch.draw()
+        if self.game_state == "menu":
+            self.label_menu.draw()
+        elif self.game_state == "playing":
+            self.label_score.text = f"Score: {self.score}"
+            self.label_lives.text = f"Lives: {self.lives}"
+            self.label_fps.text = f"FPS: {self.fps:.2f}"
+            self.label_score.draw()
+            self.label_lives.draw()
+            self.label_fps.draw()
+        elif self.game_state == "paused":
+            self.label_pause.draw()
+        elif self.game_state == "gameover":
+            self.label_gameover_main.draw()
+            self.label_gameover_score.text = f"Final Score: {self.score}"
+            self.label_gameover_score.draw()
+            self.label_gameover_highscore.text = f"High Score: {self.high_score}"
+            self.label_gameover_highscore.draw()
+            self.label_gameover_restart.draw()
+        # Ensure the updated content is shown immediately
+        self.flip()
+        return super().on_resize(width, height)
 
     def start_game(self):
         self.game_state = "playing"
@@ -431,6 +496,8 @@ class Game(pyglet.window.Window):
             laser_sound.play()
         if len(self.lasers) > MAX_LASERS:
             self.lasers = self.lasers[-MAX_LASERS:]
+            
+
 
 if __name__ == "__main__":
     game = Game(800, 600)
