@@ -41,7 +41,7 @@ Space Game is a fast-paced, arcade shooter where quick reflexes and strategic po
 3. **Run the project:**
    ```bash
    python main.py
-   
+
 
 ## Controls
    - Arrow Keys: Move your spaceship.
