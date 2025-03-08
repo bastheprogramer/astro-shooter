@@ -6,7 +6,7 @@ An exciting arcade-style space shooter built with Python and Pygame. In this gam
 
 - [Introduction](#introduction)
 - [Features](#features)
-- [Installation](#installation)
+- [How to run](#How-to-run)
 - [Usage](#usage)
 - [Controls](#controls)
 - [Project Structure](#project-structure)
@@ -41,7 +41,6 @@ Space Game is a fast-paced, arcade shooter where quick reflexes and strategic po
    pip install -r requirements.txt
 
 3. **Run the project:**
-
-4. 
+   ```bash
    python main.py
-     
+   
