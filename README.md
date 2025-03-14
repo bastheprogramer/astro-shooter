@@ -30,8 +30,8 @@ Space Game is a fast-paced, arcade shooter where quick reflexes and strategic po
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/bastheprogramer/space-game.git
-   cd space-game
+   git clone https://github.com/bastheprogramer/astro-shooter.git
+   cd astro-shooter
    
 2. **install Dependencies:**
    
