@@ -481,7 +481,7 @@ class Game(pyglet.window.Window):
     def shoot(self, tryL_boost):
         if tryL_boost:
             for z in range(-45, 46, 45):
-                new_laser = lazer.Lazer(
+                new_laser = self.newlazer(
                     player.player_sprite.x,
                     player.player_sprite.y,
                     player.player_sprite.rotation + z,
@@ -491,7 +491,7 @@ class Game(pyglet.window.Window):
                 self.lasers.append(new_laser)
                 laser_sound.play()
         else:
-            new_laser = lazer.Lazer(
+            new_laser = self.newlazer(
                 player.player_sprite.x,
                 player.player_sprite.y,
                 player.player_sprite.rotation,
@@ -502,6 +502,15 @@ class Game(pyglet.window.Window):
             laser_sound.play()
         if len(self.lasers) > MAX_LASERS:
             self.lasers = self.lasers[-MAX_LASERS:]
+    
+    def newlazer(self, X, Y, R, batch,lazer_img):
+        return lazer.Lazer(
+                X,
+                Y,
+                R,
+                batch,
+                lazer_img
+            )
 
 if __name__ == "__main__":
     game = Game(800, 600)
