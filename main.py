@@ -226,7 +226,7 @@ class Game(pyglet.window.Window):
     def process_auto_fire(self):
         # Auto-fire: fire immediately on press and then every 'shoottime' frames
         self.shoottime += 1
-        if self.iamshooting and self.shoottime >= self.shootspeed:
+        if self.iamshooting and self.shoottime == self.shootspeed:
             self.shoottime = 0
             self.shoot(self.active_powerups.get("tryL_boost", False))
 
