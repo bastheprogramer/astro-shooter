@@ -41,6 +41,11 @@ lazer_img = load(os.path.join(sprites_dir, "lazer.png"))
 lazer_img.anchor_x = lazer_img.width // 2
 lazer_img.anchor_y = lazer_img.height // 2
 
+sprites_dir = os.path.join(os.path.dirname(__file__), 'sprites')
+explosion_img = pyglet.image.load(os.path.join(sprites_dir,"explosion.png"))
+explosion_img.anchor_x = explosion_img.width // 2
+explosion_img.anchor_y = explosion_img.height // 2
+
 # -------------------------
 # Helper Function: Safe Sprite Deletion
 # -------------------------
@@ -240,7 +245,7 @@ class Game(pyglet.window.Window):
             for a in nearby:
                 if isinstance(a, astrod.astrode) and l.collides_with(a):
                     explosion_sound.play()
-                    self.explosions.append(Explosion(a.astrode_sprite.x, a.astrode_sprite.y, self.batch))
+                    self.explosions.append(Explosion(a.astrode_sprite.x, a.astrode_sprite.y, self.batch, explosion_img))
                     fragments = a.explode()
                     self.asteroids.extend(fragments)
                     self.score += 50
@@ -277,7 +282,7 @@ class Game(pyglet.window.Window):
             dy_a = a.astrode_sprite.y - player.player_sprite.y
             if dx_a * dx_a + dy_a * dy_a < 900:
                 explosion_sound.play()
-                self.explosions.append(Explosion(a.astrode_sprite.x, a.astrode_sprite.y, self.batch))
+                self.explosions.append(Explosion(a.astrode_sprite.x, a.astrode_sprite.y, self.batch, explosion_img))
                 if not self.active_powerups.get("shield", False):
                     self.lives -= 1
                 safe_delete_sprite(a.astrode_sprite)
