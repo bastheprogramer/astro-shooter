@@ -1,46 +1,44 @@
 import pyglet
-import math
 import random
+import math
 
-class PowerUp:
-    def __init__(self, x, y, batch,powerup_img, ptype=None):
-        self.batch = batch
-        self.sprite = pyglet.sprite.Sprite(
-            powerup_img, x=x, y=y, batch=batch)
-        self.sprite.scale = 0.15
-        self.x_speed = 0
-        self.y_speed = -100  # Falls downward.
+class PowerUp(pyglet.sprite.Sprite):
+    def __init__(self, img, x, y, batch, ptype=None):
+        super().__init__(img, x=x, y=y, batch=batch)
+        self.scale = 0.15
         self.active = True
-        # Choose a power-up type: "life", "score", "speed", "tryL", or "shield".
-        self.ptype = ptype if ptype is not None else random.choice(["life", "score", "speed", "tryL", "shield"])
-    
+        self.y_speed = -100  # Falls downward
+        
+        # If no type is specified, pick a random one
+        if ptype:
+            self.ptype = ptype
+        else:
+            # Weighted choice (life is rare, fastfire is common, score is very common)
+            self.ptype = random.choices(
+                ["life", "score", "speed", "fastfire"],
+                weights=[10, 50, 20, 30], 
+                k=1
+            )[0]
+
     def update(self, dt):
-        self.sprite.x += self.x_speed * dt
-        self.sprite.y += self.y_speed * dt
-        if self.sprite.y < 0:
+        """Moves the powerup and checks bounds."""
+        self.y += self.y_speed * dt
+        
+        # Deactivate if it falls off the bottom of the screen
+        if self.y < -50:
             self.active = False
 
-    def collides_with(self, player_sprite):
-        dx = self.sprite.x - player_sprite.x
-        dy = self.sprite.y - player_sprite.y
-        distance = math.sqrt(dx**2 + dy**2)
-        return distance < 60
+    def collides_with(self, player):
+        """Simple circular collision detection."""
+        dx = self.x - player.x
+        dy = self.y - player.y
+        # Squared distance check is faster than sqrt
+        return (dx*dx + dy*dy) < 3600  # 60 pixels radius squared
 
     def apply(self):
-        effect = {}
-        if self.ptype == "life":
-            effect["lives"] = 1
-        elif self.ptype == "score":
-            effect["score"] = 2500
-        elif self.ptype == "speed":
-            effect["speed_boost"] = 2.0
-            effect["speed_duration"] = 5.0
-        elif self.ptype == "tryL":
-            effect["tryL"] = True
-            effect["tryL_duration"] = 5.0
-        elif self.ptype == "shield":
-            effect["shield"] = True
-            effect["shield_duration"] = 5.0
+        """
+        Returns the type of powerup. 
+        The Game class calls this upon collision to determine what to do.
+        """
         self.active = False
-
-        return effect
+        return self.ptype

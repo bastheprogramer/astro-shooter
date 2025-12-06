@@ -1,36 +1,32 @@
-from pyglet.image import load
-from pyglet.sprite import Sprite
-from numba import njit
-from numpy import degrees, atan2
-import os
+import pyglet
+import math
+from pyglet.window import key
 
-sprites_dir = os.path.join(os.path.dirname(__file__), 'sprites')
-player_img = load(os.path.join(sprites_dir, "player.png"))
-player_img.anchor_x = player_img.width // 2
-player_img.anchor_y = player_img.height // 2
+class Player(pyglet.sprite.Sprite):
+    def __init__(self, img, x, y, batch):
+        super().__init__(img, x=x, y=y, batch=batch)
+        self.scale = 0.1
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.drag = 0.95  # Physics drag
+        self.accel = 20.0 # Acceleration speed
 
-player_sprite = Sprite(player_img)
-player_sprite.scale = 0.1
-player_sprite.x = 0
-player_sprite.y = 0
+    def update(self, dt, keys, mouse_x, mouse_y):
+        # 1. Rotation (Point to mouse)
+        dx = self.x - mouse_x
+        dy = self.y - mouse_y
+        target_angle = -math.degrees(math.atan2(dy, dx)) - 90
+        self.rotation = target_angle
 
-xspeed = 0
-yspeed = 0
-@njit
-def calculate(player_x, player_y, mouse_x, mouse_y):
-    dx = player_x - mouse_x
-    dy = player_y - mouse_y
-    return -(degrees(atan2(dy, dx)))
+        # 2. Movement (WSAD)
+        # We add acceleration to velocity, rather than setting position directly
+        if keys[key.W]: self.velocity_y += self.accel
+        if keys[key.S]: self.velocity_y -= self.accel
+        if keys[key.A]: self.velocity_x -= self.accel
+        if keys[key.D]: self.velocity_x += self.accel
 
-def PointAndCalculate(player, GameWindow):
-    player.player_sprite.rotation = calculate(player_sprite.x, player_sprite.y, GameWindow._mouse_x, GameWindow._mouse_y) - 90
-
-def CheckAndMove(dx, dy, player ,drag, speed_multiplier=1.0):
-    # Simply update the player's sprite position using the computed delta values.
-    player.xspeed += dx
-    player.yspeed += dy
-    
-    player.xspeed *= drag
-    player.yspeed *= drag
-    player.player_sprite.x += player.xspeed
-    player.player_sprite.y += player.yspeed
+        # 3. Apply Physics
+        self.velocity_x *= self.drag
+        self.velocity_y *= self.drag
+        self.x += self.velocity_x * dt
+        self.y += self.velocity_y * dt
