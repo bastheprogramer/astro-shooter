@@ -8,7 +8,7 @@ from laser import Laser
 from asteroid import Asteroid
 from explosion import Explosion
 from powerup import PowerUp
-from highscore import load_high_score, save_high_score
+from highscore import LoadHighScore, SaveHighScore
 
 # Constants
 WIDTH, HEIGHT = 800, 600
@@ -66,7 +66,7 @@ class GameWindow(pyglet.window.Window):
         # State
         self.score = 0
         self.lives = 3
-        self.high_score = load_high_score()
+        self.high_score = LoadHighScore()
         self.game_state = "menu"
         
         # Shooting
@@ -288,7 +288,7 @@ class GameWindow(pyglet.window.Window):
         self.game_state = "gameover"
         if self.score > self.high_score:
             self.high_score = self.score
-            save_high_score(self.score)
+            SaveHighScore(self.score)
             self.lbl_high.text = f"High Score: {self.high_score}"
             self.lbl_center.text = "NEW HIGH SCORE!\n\nGAME OVER\nPRESS ENTER TO RESTART"
         else:

@@ -36,16 +36,18 @@ Space Game is a fast-paced, arcade shooter where quick reflexes and strategic po
 2. **install Dependencies:**
    
    ```bash
-   pip install -r requirements.txt
+   make install
+   ```
 
 3. **Run the project:**
    ```bash
-   python main.py
+   make run
+   ```
 
 
 ## Controls
    - Arrow Keys: Move your spaceship.
-   - Spacebar: Shoot lasers.
+   - left click: Shoot lasers.
    - P: Pause or resume the game.
 
 ## Future Enhancements

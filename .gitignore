@@ -7,3 +7,5 @@ highscore.txt
 *.pyc
 /__pycache__
 /.venv
+/build
+/dist
