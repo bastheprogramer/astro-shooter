@@ -9,37 +9,18 @@ from asteroid import Asteroid
 from explosion import Explosion
 from powerup import PowerUp
 from highscore import LoadHighScore, SaveHighScore
+from resources import ResourceManager
+from gamestate import GameState
 
 # Constants
 WIDTH, HEIGHT = 800, 600
 FIXED_DT = 1 / 60.0
 
-def center_anchor(img):
-    img.anchor_x = img.width // 2
-    img.anchor_y = img.height // 2
-    return img
-
 base_dir = os.path.dirname(__file__)
-sprite_dir = os.path.join(base_dir, 'sprites')
-sound_dir = os.path.join(base_dir, 'sounds')
 
-# Load Assets
-res = {
-    "player": center_anchor(pyglet.image.load(os.path.join(sprite_dir, "player.png"))),
-    "laser": center_anchor(pyglet.image.load(os.path.join(sprite_dir, "lazer.png"))),
-    "asteroid": center_anchor(pyglet.image.load(os.path.join(sprite_dir, "astrode.png"))),
-    "explosion": center_anchor(pyglet.image.load(os.path.join(sprite_dir, "explosion.png"))),
-    "powerup": center_anchor(pyglet.image.load(os.path.join(sprite_dir, "powerup.png"))),
-    "cursor": pyglet.image.load(os.path.join(sprite_dir, "pointer.png"))
-}
-
-# Sounds
-sfx = {
-    "laser": pyglet.media.load(os.path.join(sound_dir, "laserShoot.wav"), streaming=False),
-    "explosion": pyglet.media.load(os.path.join(sound_dir, "explosion.wav"), streaming=False),
-    "powerup": pyglet.media.load(os.path.join(sound_dir, "powerUp.wav"), streaming=False),
-    "music": pyglet.media.load(os.path.join(sound_dir, "background.wav"), streaming=True)
-}
+# Load Assets via ResourceManager (will raise helpful errors if missing)
+_rm = ResourceManager(base_dir)
+res, sfx = _rm.LoadResources()
 
 class GameWindow(pyglet.window.Window):
     def __init__(self):
@@ -67,7 +48,7 @@ class GameWindow(pyglet.window.Window):
         self.score = 0
         self.lives = 3
         self.high_score = LoadHighScore()
-        self.game_state = "menu"
+        self.game_state = GameState.Menu
         
         # Shooting
         self.is_firing = False
@@ -118,7 +99,7 @@ class GameWindow(pyglet.window.Window):
         self.mouse_y = y
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if button == pyglet.window.mouse.LEFT and self.game_state == "playing":
+        if button == pyglet.window.mouse.LEFT and self.game_state == GameState.Playing:
             self.is_firing = True
 
     def on_mouse_release(self, x, y, button, modifiers):
@@ -127,13 +108,13 @@ class GameWindow(pyglet.window.Window):
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ENTER:
-            if self.game_state != "playing":
-                self.game_state = "playing"
+            if self.game_state != GameState.Playing:
+                self.game_state = GameState.Playing
                 self.lbl_center.visible = False
                 self.reset_game()
 
     def update(self, dt):
-        if self.game_state != "playing":
+        if self.game_state != GameState.Playing:
             return
 
         # Update Player (with bounds)
@@ -285,7 +266,7 @@ class GameWindow(pyglet.window.Window):
         self.powerups.append(PowerUp(res["powerup"], x, y, self.batch))
 
     def game_over(self):
-        self.game_state = "gameover"
+        self.game_state = GameState.GameOver
         if self.score > self.high_score:
             self.high_score = self.score
             SaveHighScore(self.score)
