@@ -3,11 +3,11 @@ import os
 import random
 from typing import List
 
-from player import Player
-from laser import Laser
-from asteroid import Asteroid
-from explosion import Explosion
-from powerup import PowerUp
+from entities.player import Player
+from entities.laser import Laser
+from entities.asteroid import Asteroid
+from entities.explosion import Explosion
+from entities.powerup import PowerUp
 from highscore import LoadHighScore, SaveHighScore
 from resources import ResourceManager
 from gamestate import GameState
@@ -20,7 +20,7 @@ base_dir = os.path.dirname(__file__)
 
 # Load Assets via ResourceManager (will raise helpful errors if missing)
 _rm = ResourceManager(base_dir)
-res, sfx = _rm.LoadResources()
+registry = _rm.load_resources()
 
 class GameWindow(pyglet.window.Window):
     def __init__(self):
@@ -34,11 +34,11 @@ class GameWindow(pyglet.window.Window):
         self.mouse_y = HEIGHT // 2
         
         # Cursor
-        cursor = pyglet.window.ImageMouseCursor(res["cursor"], 0, 0)
+        cursor = pyglet.window.ImageMouseCursor(registry.sprite("cursor"), 0, 0)
         self.set_mouse_cursor(cursor)
 
         # Game Objects
-        self.player = Player(res["player"], WIDTH//2, HEIGHT//2, self.batch)
+        self.player = Player(registry.sprite("player"), WIDTH//2, HEIGHT//2, self.batch)
         self.lasers: List[Laser] = []
         self.asteroids: List[Asteroid] = []
         self.explosions: List[Explosion] = []
@@ -61,7 +61,7 @@ class GameWindow(pyglet.window.Window):
         self.asteroid_spawn_rate = 2  # % chance per frame
         
         # Audio
-        self.bg_player = sfx["music"].play()
+        self.bg_player = registry.sound("music").play()
         self.bg_player.loop = True
         self.bg_player.volume = 0.3
         
@@ -126,8 +126,8 @@ class GameWindow(pyglet.window.Window):
         self.fire_cooldown -= dt
         if self.is_firing and self.fire_cooldown <= 0:
             self.fire_cooldown = self.fire_rate
-            sfx["laser"].play()
-            self.lasers.append(Laser(res["laser"], self.player.x, self.player.y, 
+            registry.sound("laser").play()
+            self.lasers.append(Laser(registry.sprite("laser"), self.player.x, self.player.y, 
                                     self.player.rotation, self.batch))
         
         # Fast fire powerup timer
@@ -160,8 +160,8 @@ class GameWindow(pyglet.window.Window):
                     self.lasers.remove(laser)
                     
                     # Create explosion
-                    self.explosions.append(Explosion(asteroid.x, asteroid.y, self.batch, res["explosion"]))
-                    sfx["explosion"].play()
+                    self.explosions.append(Explosion(asteroid.x, asteroid.y, self.batch, registry.sprite("explosion")))
+                    registry.sound("explosion").play()
                     
                     # Score based on size
                     self.score += int(100 * asteroid.scale)
@@ -191,8 +191,8 @@ class GameWindow(pyglet.window.Window):
             dx = asteroid.x - self.player.x
             dy = asteroid.y - self.player.y
             if (dx*dx + dy*dy) < 1600:
-                sfx["explosion"].play()
-                self.explosions.append(Explosion(asteroid.x, asteroid.y, self.batch, res["explosion"]))
+                registry.sound("explosion").play()
+                self.explosions.append(Explosion(asteroid.x, asteroid.y, self.batch, registry.sprite("explosion")))
                 self.lives -= 1
                 asteroid.active = False
                 asteroid.delete()
@@ -213,7 +213,7 @@ class GameWindow(pyglet.window.Window):
             
             if powerup.collides_with(self.player):
                 ptype = powerup.apply()
-                sfx["powerup"].play()
+                registry.sound("powerup").play()
                 powerup.delete()
                 self.powerups.remove(powerup)
                 
@@ -260,10 +260,10 @@ class GameWindow(pyglet.window.Window):
             vx = random.uniform(-200, -100)
             vy = random.uniform(-50, 50)
             
-        self.asteroids.append(Asteroid(res["asteroid"], self.batch, x, y, vx, vy))
+        self.asteroids.append(Asteroid(registry.sprite("asteroid"), self.batch, x, y, vx, vy))
 
     def spawn_powerup(self, x, y):
-        self.powerups.append(PowerUp(res["powerup"], x, y, self.batch))
+        self.powerups.append(PowerUp(registry.sprite("powerup"), x, y, self.batch))
 
     def game_over(self):
         self.game_state = GameState.GameOver
