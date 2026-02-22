@@ -1,5 +1,7 @@
 from pathlib import Path
+from utils import create_alpha_mask
 from typing import Dict, Tuple, Union
+import numpy as np
 
 import pyglet
 
@@ -11,9 +13,15 @@ class AssetRegistry:
         self,
         sprites: Dict[str, pyglet.image.AbstractImage],
         sounds: Dict[str, pyglet.media.Source],
+        masks: Dict[pyglet.image.AbstractImage, np.ndarray],
     ) -> None:
         self._sprites = dict(sprites)
         self._sounds = dict(sounds)
+        self._masks = dict(masks)
+
+    @property
+    def masks(self) -> Dict[pyglet.image.AbstractImage, np.ndarray]:
+        return self._masks
 
     @property
     def sprites(self) -> Dict[str, pyglet.image.AbstractImage]:
@@ -23,11 +31,15 @@ class AssetRegistry:
     def sounds(self) -> Dict[str, pyglet.media.Source]:
         return self._sounds
 
+    def mask(self, sprite: pyglet.image.AbstractImage) -> np.ndarray:
+        return self._masks[sprite]
+
     def sprite(self, key: str) -> pyglet.image.AbstractImage:
         return self._sprites[key]
 
     def sound(self, key: str) -> pyglet.media.Source:
         return self._sounds[key]
+
 
 class ResourceManager:
     """
@@ -73,11 +85,17 @@ class ResourceManager:
             'explosion': self.load_image(sprite_dir / 'explosion.png', center_anchor=True),
             'powerup': self.load_image(sprite_dir / 'powerup.png', center_anchor=True),
             'cursor': self.load_image(sprite_dir / 'pointer.png', center_anchor=False),
+            'missile': self.load_image(sprite_dir / 'missile.png', center_anchor=True),
         }
         sounds = {
             'laser': self.load_sound(sound_dir / 'laserShoot.wav', streaming=False),
             'explosion': self.load_sound(sound_dir / 'explosion.wav', streaming=False),
             'powerup': self.load_sound(sound_dir / 'powerUp.wav', streaming=False),
             'music': self.load_sound(sound_dir / 'background.wav', streaming=True),
+            'missile': self.load_sound(sound_dir / 'missile.wav', streaming=False),
         }
-        return AssetRegistry(sprites, sounds)
+        masks = {
+            sprite: create_alpha_mask(sprite)
+            for _, sprite in sprites.items()
+        }
+        return AssetRegistry(sprites, sounds, masks)

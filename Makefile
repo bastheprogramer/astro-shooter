@@ -4,9 +4,13 @@ run:
 	python3 main.py
 
 build:
-	pyinstaller main.py --windowed \
+	rm -rf build dist *.spec
+	pyinstaller main.py \
+		--windowed \
 		--add-data "sprites:sprites" \
-		--add-data "sounds:sounds"
+		--add-data "sounds:sounds" \
+		--name "Astro shooter" 
+		
 
 clean:
 	rm -rf build dist *.spec

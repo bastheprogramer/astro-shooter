@@ -1,17 +1,20 @@
 import pyglet
 import os
 import random
-from typing import List
+from typing import List, Union
 
 from entities.player import Player
 from entities.laser import Laser
 from entities.asteroid import Asteroid
 from entities.explosion import Explosion
 from entities.powerup import PowerUp
+from entities.tracking_missile import TrackingMissile
 from highscore import LoadHighScore, SaveHighScore
 from resources import ResourceManager
 from gamestate import GameState
-
+from utils import are_sprites_colliding
+from Weapons import WeaponType
+from Scheduler import Scheduler
 # Constants
 WIDTH, HEIGHT = 800, 600
 FIXED_DT = 1 / 60.0
@@ -39,7 +42,7 @@ class GameWindow(pyglet.window.Window):
 
         # Game Objects
         self.player = Player(registry.sprite("player"), WIDTH//2, HEIGHT//2, self.batch)
-        self.lasers: List[Laser] = []
+        self.weapons: List[Union[Laser, TrackingMissile]] = []
         self.asteroids: List[Asteroid] = []
         self.explosions: List[Explosion] = []
         self.powerups: List[PowerUp] = []
@@ -50,14 +53,17 @@ class GameWindow(pyglet.window.Window):
         self.high_score = LoadHighScore()
         self.game_state = GameState.Menu
         
+        # Scheduler
+        self.Scheduler = Scheduler()
+        
         # Shooting
         self.is_firing = False
         self.fire_cooldown = 0
         self.fire_rate = 0.15  # Base fire rate
-        self.fire_rate_timer = 0  # Timer for temporary powerup
+        self.unlocked_weapon = [WeaponType.Laser]
+        self.weapon = WeaponType.Laser
         
         # Spawning
-        self.powerup_timer = 0
         self.asteroid_spawn_rate = 2  # % chance per frame
         
         # Audio
@@ -74,21 +80,21 @@ class GameWindow(pyglet.window.Window):
                                             anchor_x='center', anchor_y='center', 
                                             batch=self.batch, font_size=20, bold=True,
                                             multiline=True, width=400, align='center')
-
         pyglet.clock.schedule_interval(self.update, FIXED_DT)
 
     def reset_game(self):
         self.score = 0
         self.lives = 3
-        self.lasers.clear()
+        self.weapons.clear()
         self.asteroids.clear()
         self.explosions.clear()
         self.powerups.clear()
         self.player.x, self.player.y = WIDTH // 2, HEIGHT // 2
         self.player.velocity_x, self.player.velocity_y = 0, 0
-        self.powerup_timer = 0
         self.fire_rate = 0.15
-        self.fire_rate_timer = 0
+        self.asteroid_spawn_rate = 2
+        self.weapon = WeaponType.Laser
+        self.unlocked_weapon = [WeaponType.Laser]
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_x = x
@@ -112,36 +118,57 @@ class GameWindow(pyglet.window.Window):
                 self.game_state = GameState.Playing
                 self.lbl_center.visible = False
                 self.reset_game()
+        if symbol in (pyglet.window.key._1, pyglet.window.key._2):
+            if self.game_state == GameState.Playing:
+                index = symbol - pyglet.window.key._1
+                if index < len(self.unlocked_weapon):
+                    self.weapon = self.unlocked_weapon[index]
+        if symbol == pyglet.window.key.ESCAPE and self.game_state == GameState.Playing:
+            self.game_state = GameState.Paused
+            self.lbl_center.text = "PAUSED\n\nPRESS ESC TO RESUME"
+            self.lbl_center.visible = True
+        elif symbol == pyglet.window.key.ESCAPE and self.game_state == GameState.Paused:
+            self.game_state = GameState.Playing
+            self.lbl_center.visible = False
+            
 
+        
+    
     def update(self, dt):
         if self.game_state != GameState.Playing:
             return
+        
+        # Update scheduler tasks
+        self.Scheduler.update_schedule()
 
         # Update Player (with bounds)
         self.player.update(dt, self.keys, self.mouse_x, self.mouse_y)
         self.player.x = max(20, min(WIDTH-20, self.player.x))
         self.player.y = max(20, min(HEIGHT-20, self.player.y))
 
+        
         # Shooting
         self.fire_cooldown -= dt
         if self.is_firing and self.fire_cooldown <= 0:
             self.fire_cooldown = self.fire_rate
-            registry.sound("laser").play()
-            self.lasers.append(Laser(registry.sprite("laser"), self.player.x, self.player.y, 
+            
+            match self.weapon:
+                case WeaponType.Laser:
+                    registry.sound("laser").play()
+                    self.weapons.append(Laser(registry.sprite("laser"), self.player.x, self.player.y, 
                                     self.player.rotation, self.batch))
+                case WeaponType.TrackingMissile:
+                    registry.sound("missile").play()
+                    self.weapons.append(TrackingMissile(registry.sprite("missile"), self.player.x, self.player.y,
+                                    self.player.rotation, self.batch, self.asteroids))
         
-        # Fast fire powerup timer
-        if self.fire_rate_timer > 0:
-            self.fire_rate_timer -= dt
-            if self.fire_rate_timer <= 0:
-                self.fire_rate = 0.15  # Reset to normal
 
         # Update Lasers
-        for laser in self.lasers[:]:
-            laser.update(dt, WIDTH, HEIGHT)
-            if not laser.active:
-                laser.delete()
-                self.lasers.remove(laser)
+        for weapon in self.weapons[:]:
+            weapon.update(dt, WIDTH, HEIGHT)
+            if not weapon.active:
+                weapon.delete()
+                self.weapons.remove(weapon)
 
         # Spawn Asteroids
         if random.randint(0, 100) < self.asteroid_spawn_rate:
@@ -151,32 +178,34 @@ class GameWindow(pyglet.window.Window):
         for asteroid in self.asteroids[:]:
             asteroid.update(dt, WIDTH, HEIGHT)
             
-            # Laser collision
+            # weapon collision
             hit = False
-            for laser in self.lasers[:]:
-                if laser.active and asteroid.active and laser.collides_with(asteroid):
-                    laser.active = False
-                    laser.delete()
-                    self.lasers.remove(laser)
-                    
-                    # Create explosion
-                    self.explosions.append(Explosion(asteroid.x, asteroid.y, self.batch, registry.sprite("explosion")))
-                    registry.sound("explosion").play()
-                    
-                    # Score based on size
-                    self.score += int(100 * asteroid.scale)
-                    
-                    # Spawn fragments
-                    fragments = asteroid.explode()
-                    self.asteroids.extend(fragments)
-                    asteroid.delete()
-                    
-                    # Chance to drop powerup
-                    if random.random() < 0.15:
-                        self.spawn_powerup(asteroid.x, asteroid.y)
-                    
-                    hit = True
-                    break
+            for weapon in self.weapons[:]:
+                if not (weapon.active and asteroid.active and are_sprites_colliding(weapon, asteroid)):
+                    continue
+                
+                weapon.active = False
+                weapon.delete()
+                self.weapons.remove(weapon)
+                
+                # Create explosion
+                self.explosions.append(Explosion(asteroid.x, asteroid.y, self.batch, registry.sprite("explosion")))
+                registry.sound("explosion").play()
+                
+                # Score based on size
+                self.score += int(100 * asteroid.scale)
+                
+                # Spawn fragments
+                fragments = asteroid.explode()
+                self.asteroids.extend(fragments)
+                asteroid.delete()
+                
+                # Chance to drop powerup
+                if random.random() < 0.15:
+                    self.spawn_powerup(asteroid.x, asteroid.y)
+                
+                hit = True
+                break
             
             if hit:
                 self.asteroids.remove(asteroid)
@@ -188,12 +217,13 @@ class GameWindow(pyglet.window.Window):
                 continue
 
             # Player collision
-            dx = asteroid.x - self.player.x
-            dy = asteroid.y - self.player.y
-            if (dx*dx + dy*dy) < 1600:
+            if are_sprites_colliding(asteroid, self.player):
                 registry.sound("explosion").play()
                 self.explosions.append(Explosion(asteroid.x, asteroid.y, self.batch, registry.sprite("explosion")))
-                self.lives -= 1
+                if self.player.is_vulnerable:
+                    self.lives -= 1
+                    self.player.is_vulnerable = False
+                    self.Scheduler.schedule_update(lambda player: setattr(player, 'is_vulnerable', True), 5, (self.player,)) # 5 ticks of invulnerability
                 asteroid.active = False
                 asteroid.delete()
                 self.asteroids.remove(asteroid)
@@ -211,23 +241,26 @@ class GameWindow(pyglet.window.Window):
         for powerup in self.powerups[:]:
             powerup.update(dt)
             
-            if powerup.collides_with(self.player):
+            if are_sprites_colliding(powerup, self.player):
                 ptype = powerup.apply()
                 registry.sound("powerup").play()
                 powerup.delete()
                 self.powerups.remove(powerup)
                 
                 # Apply powerup effects
-                if ptype == "life":
-                    self.lives += 1
-                elif ptype == "score":
-                    self.score += 500
-                elif ptype == "speed":
-                    self.player.accel = min(30, self.player.accel + 5)
-                elif ptype == "fastfire":
-                    self.fire_rate = 0.05  # Much faster shooting
-                    self.fire_rate_timer = 10  # Lasts 10 seconds
-                    
+                match ptype:
+                    case "life":
+                        self.lives += 1
+                    case "score":
+                        self.score += 500
+                    case "speed":
+                        self.player.accel = min(30, self.player.accel + 5)
+                    case "fastfire":
+                        self.fire_rate = 0.05  # Much faster shooting
+                        
+                        last_entry = self.Scheduler.cancel_schedule(lambda: setattr(self, 'fire_rate', 0.15))  # Cancel any existing reset tasks
+                        time = last_entry[2] if last_entry else 0 + 10*60
+                        self.Scheduler.schedule_update(lambda: setattr(self, 'fire_rate', 0.15), time)  # Reset after 10 seconds               
             elif not powerup.active:
                 powerup.delete()
                 self.powerups.remove(powerup)
@@ -236,11 +269,23 @@ class GameWindow(pyglet.window.Window):
         self.lbl_score.text = f"Score: {self.score}"
         self.lbl_lives.text = f"Lives: {self.lives}"
         
+        if self.score > self.high_score:
+            self.high_score = self.score
+            SaveHighScore(self.score)
+            self.lbl_high.text = f"High Score: {self.high_score}"
+            
+        
         # Increase difficulty
         if self.score > 5000 and self.asteroid_spawn_rate < 5:
             self.asteroid_spawn_rate = 3
         if self.score > 15000 and self.asteroid_spawn_rate < 7:
             self.asteroid_spawn_rate = 5
+        
+        if self.score > 15000 and WeaponType.TrackingMissile not in self.unlocked_weapon:
+            self.unlocked_weapon.append(WeaponType.TrackingMissile)
+            self.lbl_center.text = "Tracking Missile unlocked\n press 2 to use"
+            self.lbl_center.visible = True
+            self.Scheduler.schedule_frame(lambda text: setattr(text, "visible", False), 120, (self.lbl_center,))  # Hide after 2 seconds
 
     def spawn_asteroid(self):
         side = random.choice(['top', 'left', 'right'])
@@ -278,6 +323,7 @@ class GameWindow(pyglet.window.Window):
 
     def on_draw(self):
         self.clear()
+        self.Scheduler.update_frame()
         self.batch.draw()
 
 if __name__ == "__main__":

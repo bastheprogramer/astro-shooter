@@ -28,13 +28,6 @@ class PowerUp(pyglet.sprite.Sprite):
         if self.y < -50:
             self.active = False
 
-    def collides_with(self, player):
-        """Simple circular collision detection."""
-        dx = self.x - player.x
-        dy = self.y - player.y
-        # Squared distance check is faster than sqrt
-        return (dx*dx + dy*dy) < 3600  # 60 pixels radius squared
-
     def apply(self):
         """
         Returns the type of powerup. 

@@ -21,10 +21,3 @@ class Laser(pyglet.sprite.Sprite):
         if self.x < 0 or self.x > width or self.y < 0 or self.y > height:
             self.active = False
 
-    def collides_with(self, other):
-        # Simple circular collision is often cheaper/better than box for space games
-        dx = self.x - other.x
-        dy = self.y - other.y
-        dist_sq = dx*dx + dy*dy
-        # Combined radius approx 60 pixels
-        return dist_sq < 3600
