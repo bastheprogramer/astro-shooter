@@ -19,9 +19,6 @@ class AssetRegistry:
         self._sounds = dict(sounds)
         self._masks = dict(masks)
 
-    @property
-    def masks(self) -> Dict[pyglet.image.AbstractImage, np.ndarray]:
-        return self._masks
 
     @property
     def sprites(self) -> Dict[str, pyglet.image.AbstractImage]:
@@ -30,9 +27,6 @@ class AssetRegistry:
     @property
     def sounds(self) -> Dict[str, pyglet.media.Source]:
         return self._sounds
-
-    def mask(self, sprite: pyglet.image.AbstractImage) -> np.ndarray:
-        return self._masks[sprite]
 
     def sprite(self, key: str) -> pyglet.image.AbstractImage:
         return self._sprites[key]
