@@ -83,7 +83,7 @@ class GameWindow(pyglet.window.Window):
         pyglet.clock.schedule_interval(self.update, FIXED_DT)
 
     def reset_game(self):
-        self.score = 0
+        self.score = 30000
         self.lives = 3
         self.weapons.clear()
         self.asteroids.clear()

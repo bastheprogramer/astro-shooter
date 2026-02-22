@@ -4,12 +4,12 @@ import random
 from entities.asteroid import Asteroid
 
 class TrackingMissile(pyglet.sprite.Sprite):
-    def __init__(self, img, x, y, rotation, batch, astroids):
+    def __init__(self, img, x, y, rotation, batch, asteroids):
         super().__init__(img, x=x, y=y, batch=batch)
         self.rotation = rotation
         self.speed = 400
         self.active = True
-        self.astroids = astroids
+        self.asteroids = asteroids
         
         # FOV settings
         self.fov = 40 
