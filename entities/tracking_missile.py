@@ -1,30 +1,34 @@
 import pyglet
 import math
 import random
-from entities.asteroid import Asteroid
+from entities.asteroid import asteroid
+from typing import TYPE_CHECKING
 
-class TrackingMissile(pyglet.sprite.Sprite):
-    def __init__(self, img, x, y, rotation, batch, asteroids):
+if TYPE_CHECKING:
+    from main import GameWindow
+
+class tracking_missile(pyglet.sprite.Sprite):
+    def __init__(self, img, x, y, rotation, batch):
         super().__init__(img, x=x, y=y, batch=batch)
         self.rotation = rotation
         self.speed = 400
         self.active = True
-        self.asteroids = asteroids
-        
+
         # FOV settings
         self.fov = 40 
         
-        # Pick an initial target from the FOV
-        self.target = self.find_target_in_fov()
+        
+        self.target: asteroid = None
         
         # If no target in FOV at launch, you could either not fire 
         # or just fly straight (current behavior)
     
-    def find_target_in_fov(self):
+    
+    def find_target_in_fov(self, game: "GameWindow"):
         """Scans asteroids and returns a random one within the 20-degree FOV."""
         possible_targets = []
         
-        for asteroid in self.asteroids:
+        for asteroid in game.asteroids:
             if not asteroid.active:
                 continue
                 
@@ -45,10 +49,10 @@ class TrackingMissile(pyglet.sprite.Sprite):
             return random.choice(possible_targets)
         return None
 
-    def track_target(self, dt):
+    def track_target(self, dt, game: "GameWindow"):
         # If no target, or target died, try to find a new one in FOV
         if not self.target or not self.target.active:
-            self.target = self.find_target_in_fov()
+            self.target = self.find_target_in_fov(game)
             if not self.target:
                 return # Keep flying straight if nothing is in view
 
@@ -65,8 +69,8 @@ class TrackingMissile(pyglet.sprite.Sprite):
         self.rotation += angle_diff * (turn_speed * dt)
         self.rotation %= 360
     
-    def update(self, dt, width, height):
-        self.track_target(dt)
+    def update(self, dt, game: "GameWindow"):
+        self.track_target(dt, game)
         
         # Movement math
         rads = math.radians(self.rotation)
@@ -74,5 +78,5 @@ class TrackingMissile(pyglet.sprite.Sprite):
         self.y += math.cos(rads) * self.speed * dt
 
         # Bounds check
-        if self.x < -50 or self.x > width + 50 or self.y < -50 or self.y > height + 50:
+        if self.x < -50 or self.x > game.width + 50 or self.y < -50 or self.y > game.height + 50:
             self.active = False

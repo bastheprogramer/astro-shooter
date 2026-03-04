@@ -1,8 +1,7 @@
 from pathlib import Path
-from utils import create_alpha_mask
 from typing import Dict, Tuple, Union
 import numpy as np
-
+from Weapons import WeaponType
 import pyglet
 
 
@@ -13,11 +12,9 @@ class AssetRegistry:
         self,
         sprites: Dict[str, pyglet.image.AbstractImage],
         sounds: Dict[str, pyglet.media.Source],
-        masks: Dict[pyglet.image.AbstractImage, np.ndarray],
     ) -> None:
         self._sprites = dict(sprites)
         self._sounds = dict(sounds)
-        self._masks = dict(masks)
 
 
     @property
@@ -34,8 +31,14 @@ class AssetRegistry:
     def sound(self, key: str) -> pyglet.media.Source:
         return self._sounds[key]
 
+    def play(self, key: str) -> None:
+        try:
+            self.sound(key).play()
+        except:
+            print(f"error on playing sound {key}")
 
-class ResourceManager:
+
+class resource_manager:
     """
     Simple ResourceManager that loads images and sounds and returns a registry:
     - sprites: Dict[str, pyglet.image.AbstractImage]
@@ -74,22 +77,19 @@ class ResourceManager:
         sound_dir = self.base_path / 'sounds'
         sprites = {
             'player': self.load_image(sprite_dir / 'player.png', center_anchor=True),
-            'laser': self.load_image(sprite_dir / 'lazer.png', center_anchor=True),
+            WeaponType.Laser.value: self.load_image(sprite_dir / 'laser.png', center_anchor=True),
             'asteroid': self.load_image(sprite_dir / 'astrode.png', center_anchor=True),
             'explosion': self.load_image(sprite_dir / 'explosion.png', center_anchor=True),
             'powerup': self.load_image(sprite_dir / 'powerup.png', center_anchor=True),
             'cursor': self.load_image(sprite_dir / 'pointer.png', center_anchor=False),
-            'missile': self.load_image(sprite_dir / 'missile.png', center_anchor=True),
+            WeaponType.TrackingMissile.value: self.load_image(sprite_dir / 'missile.png', center_anchor=True),
         }
         sounds = {
-            'laser': self.load_sound(sound_dir / 'laserShoot.wav', streaming=False),
+            WeaponType.Laser.value: self.load_sound(sound_dir / 'laserShoot.wav', streaming=False),
             'explosion': self.load_sound(sound_dir / 'explosion.wav', streaming=False),
             'powerup': self.load_sound(sound_dir / 'powerUp.wav', streaming=False),
             'music': self.load_sound(sound_dir / 'background.wav', streaming=True),
-            'missile': self.load_sound(sound_dir / 'missile.wav', streaming=False),
+            WeaponType.TrackingMissile.value: self.load_sound(sound_dir / 'missile.wav', streaming=False),
         }
-        masks = {
-            sprite: create_alpha_mask(sprite)
-            for _, sprite in sprites.items()
-        }
-        return AssetRegistry(sprites, sounds, masks)
+        return AssetRegistry(sprites, sounds)
+

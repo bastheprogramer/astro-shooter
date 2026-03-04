@@ -1,8 +1,8 @@
 import pyglet
 import math
-from pyglet.window import key
+import pyglet
 
-class Player(pyglet.sprite.Sprite):
+class player(pyglet.sprite.Sprite):
     def __init__(self, img, x, y, batch):
         super().__init__(img, x=x, y=y, batch=batch)
         self.scale = 0.1
@@ -37,10 +37,10 @@ class Player(pyglet.sprite.Sprite):
         self.rotation %= 360
 
         # 2. Movement (WASD)
-        if keys[key.W]: self.velocity_y += self.accel
-        if keys[key.S]: self.velocity_y -= self.accel
-        if keys[key.A]: self.velocity_x -= self.accel
-        if keys[key.D]: self.velocity_x += self.accel
+        if keys[pyglet.window.key.W]: self.velocity_y += self.accel
+        if keys[pyglet.window.key.S]: self.velocity_y -= self.accel
+        if keys[pyglet.window.key.A]: self.velocity_x -= self.accel
+        if keys[pyglet.window.key.D]: self.velocity_x += self.accel
         
         self.apply_drag()
         

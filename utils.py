@@ -3,7 +3,8 @@ import numpy as np
 from typing import List, Tuple, Union, Dict
 from pyglet.image import AbstractImage
 
-MaskCache: Dict[int, np.ndarray] = {}
+mask_cache: Dict[int, np.ndarray] = {}
+
 def create_alpha_mask(image):
     raw = image.get_image_data()
     data = raw.get_data('RGBA', raw.width * 4)
@@ -61,18 +62,20 @@ def world_to_local(sprite, x, y):
     return int(local_x), int(local_y)
 
 def are_sprites_colliding(sprite_a, sprite_b) -> bool:
+    if sprite_a.image is None or sprite_b.image is None:
+        raise ValueError("Both sprites must have an image for collision detection.")
     # 1. Fast distance check (Keep your check_circle_collision function)
     if not check_circle_collision(sprite_a, sprite_b):
         return False
 
-    if id(sprite_a.image) not in MaskCache:
-        MaskCache[id(sprite_a.image)] = create_alpha_mask(sprite_a.image)
+    if id(sprite_a.image) not in mask_cache:
+        mask_cache[id(sprite_a.image)] = create_alpha_mask(sprite_a.image)
 
-    if id(sprite_b.image) not in MaskCache:
-        MaskCache[id(sprite_b.image)] = create_alpha_mask(sprite_b.image)
+    if id(sprite_b.image) not in mask_cache:
+        mask_cache[id(sprite_b.image)] = create_alpha_mask(sprite_b.image)
 
-    mask_a = MaskCache[id(sprite_a.image)]
-    mask_b = MaskCache[id(sprite_b.image)]
+    mask_a = mask_cache[id(sprite_a.image)]
+    mask_b = mask_cache[id(sprite_b.image)]
 
     
 

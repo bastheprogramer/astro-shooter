@@ -16,9 +16,14 @@ clean:
 	rm -rf build dist *.spec
 
 mprofile:
-	mprof run main.py
-	mprof plot
+	rm -f memory_profile.dat memray-flamegraph-memory_profile.html
+	memray run -o memory_profile.dat main.py
+	memray flamegraph memory_profile.dat
 
+pprofile:
+	rm -f profile.dat pstats.txt
+	python3 -m cProfile -o profile.dat main.py
+	python3 -m pstats profile.dat > pstascalene run
 
 install-deps:
 	pip install -r requirements.txt

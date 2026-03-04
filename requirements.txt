@@ -1,3 +1,6 @@
 pyglet==2.0.15
 numpy>=1.26.0
 pyinstaller>=6.6
+memray
+psutil
+scalene
