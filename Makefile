@@ -16,9 +16,7 @@ clean:
 	rm -rf build dist *.spec
 
 mprofile:
-	rm -f memory_profile.dat memray-flamegraph-memory_profile.html
-	memray run -o memory_profile.dat main.py
-	memray flamegraph memory_profile.dat
+	python3 main.py > mprofile.txt 
 
 pprofile:
 	rm -f profile.dat pstats.txt

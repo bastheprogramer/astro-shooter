@@ -121,8 +121,8 @@ class GameWindow(pyglet.window.Window):
     def on_close(self):
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics('lineno')
-        print("[ Top 10 memory allocations ]")
-        for stat in top_stats[:10]:
+        print("[ Top 100 memory allocations ]")
+        for stat in top_stats[:100]:
             print(stat)
         return super().on_close()
     def reset_game(self):
@@ -148,7 +148,7 @@ class GameWindow(pyglet.window.Window):
         self.fire_rate = 0.15
         self.asteroid_spawn_rate = 2
         self.weapon = WeaponType.Laser
-        self.unlocked_weapon = [WeaponType.Laser, WeaponType.TrackingMissile]
+        self.unlocked_weapon = [WeaponType.Laser]
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_x = x
