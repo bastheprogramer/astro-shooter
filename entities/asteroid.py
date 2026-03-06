@@ -1,11 +1,14 @@
-import pyglet
-import random
 import math
+import random
 from typing import TYPE_CHECKING
+
+from entities.gameobject import gameobject
 
 if TYPE_CHECKING:
     from main import GameWindow
-class asteroid(pyglet.sprite.Sprite):
+
+
+class asteroid(gameobject):
     def __init__(self, img, batch, x, y, speed_x, speed_y, size=0.35, type_val=3):
         super().__init__(img, x=x, y=y, batch=batch)
         self.scale = size
@@ -13,33 +16,29 @@ class asteroid(pyglet.sprite.Sprite):
         self.rotation_speed = random.uniform(-50, 50)
         self.vel_x = speed_x
         self.vel_y = speed_y
-        self.active = True
 
     def update(self, dt, game: "GameWindow"):
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
         self.rotation += self.rotation_speed * dt
 
-        # Simple bounds check
-        if (self.x < -50 or self.x > game.width + 50 or 
-            self.y < -50 or self.y > game.height + 50):
-            self.active = False
+        if self.is_out_of_bounds(game.width, game.height, margin=50):
+            self.deactivate()
 
     def explode(self):
-        self.active = False
+        self.deactivate()
         if self.type_val <= 1:
             return []
 
         fragments = []
         num_frags = random.randint(2, 4)
         for _ in range(num_frags):
-            # Create variation in speed and angle
             angle_var = math.radians(random.uniform(0, 360))
             speed_base = math.sqrt(self.vel_x**2 + self.vel_y**2) * 1.5
-            
+
             new_vx = math.sin(angle_var) * speed_base
             new_vy = math.cos(angle_var) * speed_base
-            
+
             frag = asteroid(
                 img=self.image,
                 batch=self.batch,
@@ -48,8 +47,8 @@ class asteroid(pyglet.sprite.Sprite):
                 speed_x=new_vx,
                 speed_y=new_vy,
                 size=self.scale * 0.6,
-                type_val=self.type_val - 1
+                type_val=self.type_val - 1,
             )
-            
+
             fragments.append(frag)
         return fragments

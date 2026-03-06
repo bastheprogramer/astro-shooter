@@ -1,82 +1,67 @@
-import pyglet
 import math
 import random
-from entities.asteroid import asteroid
 from typing import TYPE_CHECKING
+
+from entities.asteroid import asteroid
+from entities.gameobject import gameobject
 
 if TYPE_CHECKING:
     from main import GameWindow
 
-class tracking_missile(pyglet.sprite.Sprite):
+
+class tracking_missile(gameobject):
     def __init__(self, img, x, y, rotation, batch):
         super().__init__(img, x=x, y=y, batch=batch)
         self.rotation = rotation
         self.speed = 400
-        self.active = True
 
         # FOV settings
-        self.fov = 40 
-        
-        
+        self.fov = 40
         self.target: asteroid = None
-        
-        # If no target in FOV at launch, you could either not fire 
-        # or just fly straight (current behavior)
-    
-    
+
     def find_target_in_fov(self, game: "GameWindow"):
         """Scans asteroids and returns a random one within the 20-degree FOV."""
         possible_targets = []
-        
-        for asteroid in game.asteroids:
-            if not asteroid.active:
+
+        for candidate in game.asteroids:
+            if not candidate.active:
                 continue
-                
-            # 1. Get angle to this specific asteroid
-            dx = asteroid.x - self.x
-            dy = asteroid.y - self.y
+
+            dx = candidate.x - self.x
+            dy = candidate.y - self.y
             angle_to_asteroid = math.degrees(math.atan2(dx, dy))
-            
-            # 2. Calculate angular difference (Shortest path)
-            # This tells us how many degrees we'd have to turn to face it
+
             diff = (angle_to_asteroid - self.rotation + 180) % 360 - 180
-            
-            # 3. Check if it's within our FOV (half of 20 on each side)
+
             if abs(diff) <= self.fov / 2:
-                possible_targets.append(asteroid)
-        
+                possible_targets.append(candidate)
+
         if possible_targets:
             return random.choice(possible_targets)
         return None
 
     def track_target(self, dt, game: "GameWindow"):
-        # If no target, or target died, try to find a new one in FOV
         if not self.target or not self.target.active:
             self.target = self.find_target_in_fov(game)
             if not self.target:
-                return # Keep flying straight if nothing is in view
+                return
 
-        # Calculate target angle
         dx = self.target.x - self.x
         dy = self.target.y - self.y
         target_angle = math.degrees(math.atan2(dx, dy))
 
-        # Shortest path steering
         angle_diff = (target_angle - self.rotation + 180) % 360 - 180
-        
-        # Steer towards the target
-        turn_speed = 7.0  # Increased slightly for more aggressive tracking
+
+        turn_speed = 7.0
         self.rotation += angle_diff * (turn_speed * dt)
         self.rotation %= 360
-    
+
     def update(self, dt, game: "GameWindow"):
         self.track_target(dt, game)
-        
-        # Movement math
+
         rads = math.radians(self.rotation)
         self.x += math.sin(rads) * self.speed * dt
         self.y += math.cos(rads) * self.speed * dt
 
-        # Bounds check
-        if self.x < -50 or self.x > game.width + 50 or self.y < -50 or self.y > game.height + 50:
-            self.active = False
+        if self.is_out_of_bounds(game.width, game.height, margin=50):
+            self.deactivate()
