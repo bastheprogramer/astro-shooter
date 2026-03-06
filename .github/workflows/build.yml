@@ -25,7 +25,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          make
+          make build
 
       - name: Upload EXE
         uses: actions/upload-artifact@v4
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build App
         run: |
-          make
+          make build
 
       - name: Upload App
         uses: actions/upload-artifact@v4
