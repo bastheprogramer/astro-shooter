@@ -25,7 +25,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --onefile --windowed main.py
+          make
 
       - name: Upload EXE
         uses: actions/upload-artifact@v4
@@ -53,7 +53,7 @@ jobs:
 
       - name: Build App
         run: |
-          pyinstaller --windowed main.py
+          make
 
       - name: Upload App
         uses: actions/upload-artifact@v4
