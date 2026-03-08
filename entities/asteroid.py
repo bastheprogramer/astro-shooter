@@ -2,13 +2,14 @@ import math
 import random
 from typing import TYPE_CHECKING
 
-from entities.gameobject import gameobject
+from entities.GameObject import GameObject
+from entities.HostileObject import HostileObject
 
 if TYPE_CHECKING:
     from main import GameWindow
 
 
-class asteroid(gameobject):
+class Asteroid(HostileObject):
     def __init__(self, img, batch, x, y, speed_x, speed_y, size=0.35, type_val=3):
         super().__init__(img, x=x, y=y, batch=batch)
         self.scale = size
@@ -39,7 +40,7 @@ class asteroid(gameobject):
             new_vx = math.sin(angle_var) * speed_base
             new_vy = math.cos(angle_var) * speed_base
 
-            frag = asteroid(
+            frag = Asteroid(
                 img=self.image,
                 batch=self.batch,
                 x=self.x,

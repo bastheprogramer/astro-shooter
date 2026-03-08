@@ -1,13 +1,13 @@
 import random
 from typing import TYPE_CHECKING
 
-from entities.gameobject import gameobject
+from entities.GameObject import GameObject
 
 if TYPE_CHECKING:
     from main import GameWindow
 
 
-class powerup(gameobject):
+class PowerUp(GameObject):
     def __init__(self, img, x, y, batch, ptype=None):
         super().__init__(img, x=x, y=y, batch=batch)
         self.scale = 0.15
@@ -22,7 +22,7 @@ class powerup(gameobject):
                 k=1,
             )[0]
 
-    def update(self, dt):
+    def update(self, dt, game):
         self.y += self.y_speed * dt
 
         if self.y < -50:

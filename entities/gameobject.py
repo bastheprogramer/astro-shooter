@@ -1,7 +1,10 @@
 import pyglet
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from main import GameWindow
 
-class gameobject(pyglet.sprite.Sprite):
+class GameObject(pyglet.sprite.Sprite):
     """Common base class for all sprite-based game objects."""
 
     def __init__(self, img, x, y, batch):
@@ -18,4 +21,8 @@ class gameobject(pyglet.sprite.Sprite):
             or self.y < -margin
             or self.y > height + margin
         )
+    
+    def update(self, dt, game:"GameWindow"):
+        if self.is_out_of_bounds(game.width,game.height):
+            self.deactivate()
 

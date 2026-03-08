@@ -2,29 +2,29 @@ import math
 import random
 from typing import TYPE_CHECKING
 
-from entities.asteroid import asteroid
-from entities.gameobject import gameobject
-
+from entities.asteroid import Asteroid
+from entities.WeaponObject import WeaponObject
+from entities.HostileObject import HostileObject
 if TYPE_CHECKING:
     from main import GameWindow
 
 
-class tracking_missile(gameobject):
+class TrackingMissile(WeaponObject):
     def __init__(self, img, x, y, rotation, batch):
-        super().__init__(img, x=x, y=y, batch=batch)
-        self.rotation = rotation
         self.speed = 400
+        super().__init__(img, x=x, y=y, rotation=rotation, batch=batch, speed=400)
+        self.rotation = rotation
 
         # FOV settings
         self.fov = 40
-        self.target: asteroid = None
+        self.target: Asteroid = None
 
     def find_target_in_fov(self, game: "GameWindow"):
         """Scans asteroids and returns a random one within the 20-degree FOV."""
         possible_targets = []
 
-        for candidate in game.asteroids:
-            if not candidate.active:
+        for candidate in game.entities:
+            if not candidate.active and isinstance(candidate, HostileObject):
                 continue
 
             dx = candidate.x - self.x

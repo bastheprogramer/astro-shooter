@@ -1,6 +1,6 @@
 from enum import Enum
-from entities.laser import laser
-from entities.tracking_missile import tracking_missile
+from entities.laser import Laser
+from entities.TrackingMissile import TrackingMissile
 from typing import Union
 class WeaponType(Enum):
     
@@ -9,14 +9,14 @@ class WeaponType(Enum):
     TrackingMissile = "Tracking missile"
     
     @classmethod
-    def str_to_class(cls, s: str) -> Union[type[laser], type[tracking_missile]]:
+    def str_to_class(cls, s: str) -> Union[type[Laser], type[TrackingMissile]]:
         """Maps a string value to its corresponding entity class."""
         
         # We store the mapping inside the method so it doesn't 
         # accidentally become an Enum member.
         string_to_class_map = {
-            cls.Laser.value: laser,
-            cls.TrackingMissile.value: tracking_missile
+            cls.Laser.value: Laser,
+            cls.TrackingMissile.value: TrackingMissile
         }
         
         if s in string_to_class_map:

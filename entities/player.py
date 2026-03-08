@@ -1,10 +1,14 @@
 import math
 import pyglet
 
-from entities.gameobject import gameobject
+from entities.GameObject import GameObject
 
+from typing import TYPE_CHECKING
 
-class player(gameobject):
+if TYPE_CHECKING:
+    from main import GameWindow
+
+class Player(GameObject):
     def __init__(self, img, x, y, batch):
         super().__init__(img, x=x, y=y, batch=batch)
         self.scale = 0.1
@@ -18,10 +22,10 @@ class player(gameobject):
         self.velocity_x *= self.drag
         self.velocity_y *= self.drag
 
-    def update(self, dt, keys, mouse_x, mouse_y):
+    def update(self, dt, game: "GameWindow"):
         # 1. Rotation (Smooth LERP to mouse)
-        dx = mouse_x - self.x
-        dy = mouse_y - self.y
+        dx = game.mouse_x - self.x
+        dy = game.mouse_y - self.y
 
         # Calculate target angle (Pyglet uses clockwise degrees)
         target_angle = -math.degrees(math.atan2(dy, dx)) + 90
@@ -37,16 +41,19 @@ class player(gameobject):
         self.rotation %= 360
 
         # 2. Movement (WASD)
-        if keys[pyglet.window.key.W]:
+        if game.keys[pyglet.window.key.W]:
             self.velocity_y += self.accel
-        if keys[pyglet.window.key.S]:
+        if game.keys[pyglet.window.key.S]:
             self.velocity_y -= self.accel
-        if keys[pyglet.window.key.A]:
+        if game.keys[pyglet.window.key.A]:
             self.velocity_x -= self.accel
-        if keys[pyglet.window.key.D]:
+        if game.keys[pyglet.window.key.D]:
             self.velocity_x += self.accel
 
         self.apply_drag()
 
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
+
+        self.x = max(20, min(game.width-20, self.x))
+        self.y = max(20, min(game.height-20, self.y))
