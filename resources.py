@@ -77,19 +77,19 @@ class resource_manager:
         sound_dir = self.base_path / 'sounds'
         sprites = {
             'player': self.load_image(sprite_dir / 'player.png', center_anchor=True),
-            WeaponType.Laser.value: self.load_image(sprite_dir / 'laser.png', center_anchor=True),
+            WeaponType.laser.value: self.load_image(sprite_dir / 'laser.png', center_anchor=True),
             'asteroid': self.load_image(sprite_dir / 'astrode.png', center_anchor=True),
             'explosion': self.load_image(sprite_dir / 'explosion.png', center_anchor=True),
             'powerup': self.load_image(sprite_dir / 'powerup.png', center_anchor=True),
             'cursor': self.load_image(sprite_dir / 'pointer.png', center_anchor=False),
-            WeaponType.TrackingMissile.value: self.load_image(sprite_dir / 'missile.png', center_anchor=True),
+            WeaponType.tracking_missile.value: self.load_image(sprite_dir / 'missile.png', center_anchor=True),
         }
         sounds = {
-            WeaponType.Laser.value: self.load_sound(sound_dir / 'laserShoot.wav', streaming=False),
+            WeaponType.laser.value: self.load_sound(sound_dir / 'laserShoot.wav', streaming=False),
             'explosion': self.load_sound(sound_dir / 'explosion.wav', streaming=False),
             'powerup': self.load_sound(sound_dir / 'powerUp.wav', streaming=False),
             'music': self.load_sound(sound_dir / 'background.wav', streaming=True),
-            WeaponType.TrackingMissile.value: self.load_sound(sound_dir / 'missile.wav', streaming=False),
+            WeaponType.tracking_missile.value: self.load_sound(sound_dir / 'missile.wav', streaming=False),
         }
         return AssetRegistry(sprites, sounds)
 

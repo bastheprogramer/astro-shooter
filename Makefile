@@ -20,6 +20,7 @@ build:
 	pyinstaller main.py \
 		--windowed \
 		$(EXTRA_FLAGS) \
+		--collect-all jaraco \
 		--add-data "sprites$(DATASEP)sprites" \
 		--add-data "sounds$(DATASEP)sounds" \
 		--name "Astro shooter"

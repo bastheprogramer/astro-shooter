@@ -24,7 +24,7 @@ class TrackingMissile(WeaponObject):
         possible_targets = []
 
         for candidate in game.entities:
-            if not candidate.active and isinstance(candidate, HostileObject):
+            if not (candidate.active and isinstance(candidate, HostileObject)):
                 continue
 
             dx = candidate.x - self.x

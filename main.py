@@ -71,8 +71,8 @@ class GameWindow(pyglet.window.Window):
         self.is_firing = False
         self.fire_cooldown = 0
         self.fire_rate = 0.15  # Base fire rate
-        self.unlocked_weapon = [WeaponType.Laser]
-        self.weapon = WeaponType.Laser
+        self.unlocked_weapon = [WeaponType.laser]
+        self.weapon = WeaponType.laser
         self.split_fire = False
         
         # Spawning
@@ -145,8 +145,8 @@ class GameWindow(pyglet.window.Window):
         self.split_fire = False
         self.fire_rate = 0.15
         self.asteroid_spawn_rate = 2
-        self.weapon = WeaponType.Laser
-        self.unlocked_weapon = [WeaponType.Laser]
+        self.weapon = WeaponType.laser
+        self.unlocked_weapon = [WeaponType.laser]
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_x = x
@@ -280,6 +280,8 @@ class GameWindow(pyglet.window.Window):
             if isinstance(entity1, PowerUp):
                 if are_sprites_colliding(entity1, self.player):
                     entity1.apply(self)
+                    registry.play("powerup")
+                    entity1.deactivate()
 
             # Entity collisions
             for entity2 in self.entities:
@@ -350,8 +352,8 @@ class GameWindow(pyglet.window.Window):
         """
         
         
-        if WeaponType.tracking_missile_condition(score=self.score) and WeaponType.TrackingMissile not in self.unlocked_weapon:
-            self.unlocked_weapon.append(WeaponType.TrackingMissile)
+        if WeaponType.tracking_missile_condition(score=self.score) and WeaponType.tracking_missile not in self.unlocked_weapon:
+            self.unlocked_weapon.append(WeaponType.tracking_missile)
             self.lbl_center.text = "Tracking Missile unlocked\n press 2 to use"
             self.lbl_center.visible = True
             self.Scheduler.schedule_frame(lambda text: setattr(text, "visible", False), 120, (self.lbl_center,))  # Hide after 2 seconds

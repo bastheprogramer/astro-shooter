@@ -5,8 +5,8 @@ from typing import Union
 class WeaponType(Enum):
     
     # Enum Members
-    Laser = "laser"
-    TrackingMissile = "Tracking missile"
+    laser = "laser"
+    tracking_missile = "Tracking missile"
     
     @classmethod
     def str_to_class(cls, s: str) -> Union[type[Laser], type[TrackingMissile]]:
@@ -15,8 +15,8 @@ class WeaponType(Enum):
         # We store the mapping inside the method so it doesn't 
         # accidentally become an Enum member.
         string_to_class_map = {
-            cls.Laser.value: Laser,
-            cls.TrackingMissile.value: TrackingMissile
+            cls.laser.value: Laser,
+            cls.tracking_missile.value: TrackingMissile
         }
         
         if s in string_to_class_map:
@@ -31,4 +31,4 @@ class WeaponType(Enum):
         return score >= 15000
 
 if __name__ == "__main__":
-    WeaponType.str_to_class(WeaponType.Laser.value)
+    WeaponType.str_to_class(WeaponType.laser.value)

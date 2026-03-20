@@ -3,3 +3,6 @@ numpy>=1.26.0
 pyinstaller>=6.6
 scalene
 psutil
+jaraco.text
+jaraco.functools
+jaraco.contex
