@@ -5,4 +5,4 @@ scalene
 psutil
 jaraco.text
 jaraco.functools
-jaraco.contex
+jaraco.context
